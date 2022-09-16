@@ -3,10 +3,15 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-  - python=3.10
-  - numpy=1.21.2
+  - python=3.10.6
+  - numpy
   - pandas
+  - ipykernel 
+  - ipywidgets
+  - dash
   - pip
   - pip:
-    - tqdm==4.62.3
+    - plotly
+    - chart_studio 
+    - dash_bootstrap_components
 
