@@ -3,24 +3,24 @@ import plotly.express as px
 import pandas as pd
 from difflib import diff_bytes
 import numpy as np
-from dash import Dash, dcc, html, Output, Input, dash_table # pip install dash
+from dash import Dash, dcc, html, Output, Input, dash_table  # pip install dash
 import dash_bootstrap_components as dbc  # pip install dash-bootstrap-components
 
 """
 Start main function
-"""   
+"""
 # find dataframe
 PATH = pathlib.Path(__file__).parent
 DATA_PATH = PATH.joinpath("../data").resolve()
-df = pd.read_csv(DATA_PATH.joinpath('NassCattle2022.csv'), index_col="Variable")
-df2 = pd.read_csv(DATA_PATH.joinpath('NassPigs2022.csv'), index_col="Variable")
+df = pd.read_csv(DATA_PATH.joinpath("NassCattle2022.csv"), index_col="Variable")
+df2 = pd.read_csv(DATA_PATH.joinpath("NassPigs2022.csv"), index_col="Variable")
 df["Qty"] = df["Qty"].astype("float")
 
 # Build your components
 app = Dash(__name__, external_stylesheets=[dbc.themes.LUX])
 
 # Declare server for Heroku deployment. Needed for Procfile.
-server = app.server # for heroku deployment
+server = app.server  # for heroku deployment
 
 mytitle = dcc.Markdown(children="")
 mysubtitle = dcc.Markdown(children="")
@@ -31,9 +31,7 @@ bar2 = dcc.Graph(figure={})
 ### Create slider components on a card
 controls = dbc.Card(
     [
-        dbc.Label(
-            "Change the interventions to see effect on cow population"
-        ),
+        dbc.Label("Change the interventions to see effect on cow population"),
         html.Div(
             [
                 dbc.Label("Decrease Beef Birth Rate"),
@@ -131,8 +129,7 @@ app.layout = dbc.Container(
             align="center",
         ),
         html.Hr(),
-    
-    dbc.Row([dbc.Col([bar2], width=12)], justify="center"),        
+        dbc.Row([dbc.Col([bar2], width=12)], justify="center"),
     ],
     fluid=True,
 )
@@ -149,26 +146,30 @@ app.layout = dbc.Container(
     Input("myslider3", "value"),
     Input("myslider4", "value"),
     Input("myslider5", "value"),
-    Input("myslider6", "value")
+    Input("myslider6", "value"),
 )
 def update_graph(
-    reduction_in_beef_calves, reduction_in_dairy_calves, increase_in_slaughter, reduction_in_pig_breeding, reduction_in_poultry_breeding, months
+    reduction_in_beef_calves,
+    reduction_in_dairy_calves,
+    increase_in_slaughter,
+    reduction_in_pig_breeding,
+    reduction_in_poultry_breeding,
+    months,
 ):  # function arguments come from the component property of the Input
 
-    # pigs 
-    total_pigs  = df2.loc["TotalPigs", "Qty"]
-    piglets_pm     = df2.loc["PigletsPerMonth", "Qty"]
-    pigs_slaughter_pm     = df2.loc["SlaughterPerMonth", "Qty"]
+    # pigs
+    total_pigs = df2.loc["TotalPigs", "Qty"]
+    piglets_pm = df2.loc["PigletsPerMonth", "Qty"]
+    pigs_slaughter_pm = df2.loc["SlaughterPerMonth", "Qty"]
     pigGestation = df2.loc["pigGestation", "Qty"]
     pig_feed_pm_per_pig = 139
 
-    # poultry 
-    total_poultry  = 2127170289/1000 #USDA
-    poultry_slaughter_pm     = 853670.0 #USDA
-    chicks_pm     = poultry_slaughter_pm # assume the same, no data
-    poultryGestation = 1 # actaully 21 days, let's round to 1 month
+    # poultry
+    total_poultry = 2127170289 / 1000  # USDA
+    poultry_slaughter_pm = 853670.0  # USDA
+    chicks_pm = poultry_slaughter_pm  # assume the same, no data
+    poultryGestation = 1  # actaully 21 days, let's round to 1 month
     poultry_feed_pm_per_bird = 20
-
 
     # cows
     total_calves = df.loc["Calves under 500 pounds", "Qty"]
@@ -184,17 +185,23 @@ def update_graph(
     beef_cow_feed_pm_per_cow = 661
     dairy_cow_feed_pm_per_cow = 1048
 
+    # total slaughter capacity
+    cow_slaughter_hours = (
+        8  # resources/hours of single person hours for slaughter of cow
+    )
+    pig_slaughter_hours = (
+        4  # resources/hours of single person hours for slaughter of pig
+    )
+    poultry_slaughter_hours = (
+        0.08  # resources/hours of single person hours for slaughter of poultry
+    )
+    total_slaughter_cap_hours = (
+        cow_slaughter_pm * cow_slaughter_hours
+        + pigs_slaughter_pm * pig_slaughter_hours
+        + poultry_slaughter_pm * poultry_slaughter_hours
+    )
 
-
-    # total slaughter capacity 
-    cow_slaughter_hours = 8     # resources/hours of single person hours for slaughter of cow
-    pig_slaughter_hours = 4     # resources/hours of single person hours for slaughter of pig
-    poultry_slaughter_hours = 0.08 # resources/hours of single person hours for slaughter of poultry
-    total_slaughter_cap_hours = cow_slaughter_pm*cow_slaughter_hours + pigs_slaughter_pm*pig_slaughter_hours + poultry_slaughter_pm*poultry_slaughter_hours
-
-
-
-    #### Calcultaion for cows ratios 
+    #### Calcultaion for cows ratios
     # calaculate number of cows using ratios
     dairy_beef_mother_ratio = dairy_cows / beef_cows
     dairy_heifers = heifers * dairy_beef_mother_ratio
@@ -207,9 +214,9 @@ def update_graph(
 
     calves_destined_for_beef_ratio = (beef_calves + dairy_calf_steers) / total_calves
     new_beef_calfs = calves_destined_for_beef_ratio * new_calves_per_year
-    new_dairy_calfs =   new_calves_per_year - new_beef_calfs
-    new_beef_calfs_pm = (new_beef_calfs / 12)
-    new_dairy_calfs_pm = (new_dairy_calfs / 12)
+    new_dairy_calfs = new_calves_per_year - new_beef_calfs
+    new_beef_calfs_pm = new_beef_calfs / 12
+    new_dairy_calfs_pm = new_dairy_calfs / 12
 
     cattle_in_beef_track = (
         dairy_calf_steers + beef_calves + beef_steers + beef_cows + beef_heifers
@@ -222,82 +229,92 @@ def update_graph(
     # interventions, scale appropriately for maths
     reduction_in_beef_calves *= 0.01
     reduction_in_dairy_calves *= 0.01
-    reduction_in_pig_breeding *=0.01
-    reduction_in_poultry_breeding *=0.01
+    reduction_in_pig_breeding *= 0.01
+    reduction_in_poultry_breeding *= 0.01
     increase_in_slaughter *= 0.01
 
     ## define current totals
     # current_beef_feed_cattle = cattle_on_feed
     current_beef_cattle = cattle_in_beef_track
     current_dairy_cattle = cattle_in_dairy_rack
-    current_total_cattle = cattle_in_dairy_rack+cattle_in_beef_track
+    current_total_cattle = cattle_in_dairy_rack + cattle_in_beef_track
     current_total_pigs = total_pigs
     current_total_poultry = total_poultry
 
     # ibcreases from slider
-    total_slaughter_cap_hours*= increase_in_slaughter #measured in hours
-    current_cow_slaughter = cow_slaughter_pm*increase_in_slaughter # measured in head
-    current_poultry_slaughter = poultry_slaughter_pm*increase_in_slaughter  # measured in head
-    current_pig_slaughter =  pigs_slaughter_pm*increase_in_slaughter # measured in head
+    total_slaughter_cap_hours *= increase_in_slaughter  # measured in hours
+    current_cow_slaughter = cow_slaughter_pm * increase_in_slaughter  # measured in head
+    current_poultry_slaughter = (
+        poultry_slaughter_pm * increase_in_slaughter
+    )  # measured in head
+    current_pig_slaughter = (
+        pigs_slaughter_pm * increase_in_slaughter
+    )  # measured in head
     spare_slaughter_hours = 0
 
-
-
     # per month
-    other_cow_death_rate = 0.005 # 
+    other_cow_death_rate = 0.005  #
     other_pig_death_rate = 0.005
     other_poultry_death_rate = 0.005
-    new_beef_calfs_pm = (new_beef_calfs / 12)*(1-reduction_in_beef_calves)
-    new_dairy_calfs_pm = (new_dairy_calfs / 12)*(1-reduction_in_dairy_calves)
+    new_beef_calfs_pm = (new_beef_calfs / 12) * (1 - reduction_in_beef_calves)
+    new_dairy_calfs_pm = (new_dairy_calfs / 12) * (1 - reduction_in_dairy_calves)
     new_pigs_pm = piglets_pm
-    new_poultry_pm =  chicks_pm
+    new_poultry_pm = chicks_pm
 
-    d = [] # temp list
+    d = []  # temp list
 
     for i in range(months):
 
-        #determine birth rates
-        if np.abs(i-cowGestation)<=0.5:
-            new_beef_calfs_pm *= (1-reduction_in_beef_calves)
-            new_dairy_calfs_pm *= (1-reduction_in_dairy_calves)
+        # determine birth rates
+        if np.abs(i - cowGestation) <= 0.5:
+            new_beef_calfs_pm *= 1 - reduction_in_beef_calves
+            new_dairy_calfs_pm *= 1 - reduction_in_dairy_calves
 
-        if np.abs(i-pigGestation)<=0.5:
-            new_pigs_pm *= (1-reduction_in_pig_breeding)
+        if np.abs(i - pigGestation) <= 0.5:
+            new_pigs_pm *= 1 - reduction_in_pig_breeding
 
-
-        if np.abs(i-poultryGestation)<=0.5:
-            new_poultry_pm *= (1-reduction_in_poultry_breeding)
-
+        if np.abs(i - poultryGestation) <= 0.5:
+            new_poultry_pm *= 1 - reduction_in_poultry_breeding
 
         # if current_beef_cattle < 0:
         #     current_beef_cattle = 0
         # if current_dairy_cattle < 0:
         #     current_dairy_cattle = 0
         if current_total_poultry < current_poultry_slaughter:
-            spare_slaughter_hours += (current_poultry_slaughter-current_total_pigs)*poultry_slaughter_hours
+            spare_slaughter_hours += (
+                current_poultry_slaughter - current_total_pigs
+            ) * poultry_slaughter_hours
             current_poultry_slaughter = current_total_poultry
-            current_pig_slaughter += spare_slaughter_hours/pig_slaughter_hours
+            current_pig_slaughter += spare_slaughter_hours / pig_slaughter_hours
         if current_total_pigs < current_pig_slaughter:
-            spare_slaughter_hours += (current_pig_slaughter-current_total_pigs)*pig_slaughter_hours
+            spare_slaughter_hours += (
+                current_pig_slaughter - current_total_pigs
+            ) * pig_slaughter_hours
             current_pig_slaughter = current_total_pigs
-            current_cow_slaughter += spare_slaughter_hours/cow_slaughter_hours
+            current_cow_slaughter += spare_slaughter_hours / cow_slaughter_hours
 
         # other death
-        other_beef_death = other_cow_death_rate*current_beef_cattle
-        other_dairy_death = other_cow_death_rate*current_dairy_cattle
+        other_beef_death = other_cow_death_rate * current_beef_cattle
+        other_dairy_death = other_cow_death_rate * current_dairy_cattle
         other_pig_death = current_total_pigs * other_pig_death_rate
         other_poultry_death = current_total_poultry * other_poultry_death_rate
 
         # this set up only kills dairy cows when they are getting to the end of their life.
-        current_dairy_slaughter = current_dairy_cattle/(dairy_life_expectancy*12)
-        current_beef_slaughter = current_cow_slaughter-current_dairy_slaughter
+        current_dairy_slaughter = current_dairy_cattle / (dairy_life_expectancy * 12)
+        current_beef_slaughter = current_cow_slaughter - current_dairy_slaughter
 
         # some up new totals
-        current_beef_cattle += (new_beef_calfs_pm - current_beef_slaughter - other_beef_death)
-        current_dairy_cattle += (new_dairy_calfs_pm - current_dairy_slaughter - other_dairy_death)
-        current_total_poultry += (new_poultry_pm - current_poultry_slaughter - other_poultry_death)            
-        current_total_pigs += (new_pigs_pm - current_pig_slaughter - other_pig_death)
-        current_total_cattle = current_beef_cattle+current_dairy_cattle
+        current_beef_cattle += (
+            new_beef_calfs_pm - current_beef_slaughter - other_beef_death
+        )
+        current_dairy_cattle += (
+            new_dairy_calfs_pm - current_dairy_slaughter - other_dairy_death
+        )
+        current_total_poultry += (
+            new_poultry_pm - current_poultry_slaughter - other_poultry_death
+        )
+        current_total_pigs += new_pigs_pm - current_pig_slaughter - other_pig_death
+        current_total_cattle = current_beef_cattle + current_dairy_cattle
 
         if current_beef_cattle < 0:
             current_beef_cattle = 0
@@ -306,31 +323,29 @@ def update_graph(
 
         d.append(
             {
-                'Beef Pop': current_beef_cattle,
-                'Beef Born': new_beef_calfs_pm,
-                'Beef Slaughtered': current_beef_slaughter,
-                'Beef Other Death':other_beef_death,
-                'Beef Feed': current_beef_cattle*beef_cow_feed_pm_per_cow,
-                'Dairy Pop':  current_dairy_cattle,
-                'Dairy Born': new_dairy_calfs_pm,
-                'Dairy Slaughtered': current_dairy_slaughter,
-                'Dairy Other Death':other_dairy_death,
-                'Dairy Feed':  current_dairy_cattle*dairy_cow_feed_pm_per_cow,
-                'Pigs Pop': current_total_pigs,
-                'pig Pop':  current_total_pigs,
-                'pig Born': new_pigs_pm,
-                'pig Slaughtered': current_pig_slaughter,
-                'Pigs Feed': current_total_pigs*pig_feed_pm_per_pig,
-
-                'Poultry Pop': current_total_poultry,
-                'poultry Pop':  current_total_poultry,
-                'poultry Born': new_poultry_pm,
-                'poultry Slaughtered': current_poultry_slaughter,
-                'Poultry Feed': current_total_poultry*poultry_feed_pm_per_bird,
-
-                'Month': i 
-            })
-
+                "Beef Pop": current_beef_cattle,
+                "Beef Born": new_beef_calfs_pm,
+                "Beef Slaughtered": current_beef_slaughter,
+                "Beef Other Death": other_beef_death,
+                "Beef Feed": current_beef_cattle * beef_cow_feed_pm_per_cow,
+                "Dairy Pop": current_dairy_cattle,
+                "Dairy Born": new_dairy_calfs_pm,
+                "Dairy Slaughtered": current_dairy_slaughter,
+                "Dairy Other Death": other_dairy_death,
+                "Dairy Feed": current_dairy_cattle * dairy_cow_feed_pm_per_cow,
+                "Pigs Pop": current_total_pigs,
+                "pig Pop": current_total_pigs,
+                "pig Born": new_pigs_pm,
+                "pig Slaughtered": current_pig_slaughter,
+                "Pigs Feed": current_total_pigs * pig_feed_pm_per_pig,
+                "Poultry Pop": current_total_poultry,
+                "poultry Pop": current_total_poultry,
+                "poultry Born": new_poultry_pm,
+                "poultry Slaughtered": current_poultry_slaughter,
+                "Poultry Feed": current_total_poultry * poultry_feed_pm_per_bird,
+                "Month": i,
+            }
+        )
 
     df_final = pd.DataFrame(d)
     print(df_final)
@@ -338,8 +353,18 @@ def update_graph(
     # https://plotly.com/python/scatterpleth-maps/
     # fig1 = px.scatter(df_final, x="Month", y="Total Cattle Pop") #range_y=[0000,100000]
     # fig2 = px.bar(df_final, x="Month", y="Total Pop")
-    fig2 = px.bar(df_final, x="Month", y=["Beef Pop", "Dairy Pop","Pigs Pop","Poultry Pop"], title="Population Make-up")
-    fig3 = px.bar(df_final, x="Month", y=["Beef Feed", "Dairy Feed","Pigs Feed","Poultry Feed"], title="Feed Usage")
+    fig2 = px.bar(
+        df_final,
+        x="Month",
+        y=["Beef Pop", "Dairy Pop", "Pigs Pop", "Poultry Pop"],
+        title="Population Make-up",
+    )
+    fig3 = px.bar(
+        df_final,
+        x="Month",
+        y=["Beef Feed", "Dairy Feed", "Pigs Feed", "Poultry Feed"],
+        title="Feed Usage",
+    )
 
     return (
         # fig1,
@@ -349,7 +374,7 @@ def update_graph(
         # "Modelled beef and dairy industry",
     )  # returned objects are assigned to the component property of the Output
 
+
 # Run app
 if __name__ == "__main__":
     app.run_server(debug=False, port=8055)
-
