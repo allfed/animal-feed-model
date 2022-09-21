@@ -23,7 +23,7 @@ app = Dash(__name__, external_stylesheets=[dbc.themes.LUX])
 server = app.server  # for heroku deployment
 
 mytitle = dcc.Markdown(children="")
-mysubtitle = dcc.Markdown(children="")
+# mysubtitle = dcc.Markdown(children="")
 scatter = dcc.Graph(figure={})
 bar = dcc.Graph(figure={})
 bar2 = dcc.Graph(figure={})
@@ -120,7 +120,7 @@ controls = dbc.Card(
 app.layout = dbc.Container(
     [
         dbc.Row([dbc.Col([mytitle], width=6)], justify="center"),
-        dbc.Row([dbc.Col([mysubtitle], width=6)], justify="center"),
+        # dbc.Row([dbc.Col([mysubtitle], width=6)], justify="center"),
         dbc.Row(
             [
                 dbc.Col(controls, md=3),
@@ -140,7 +140,7 @@ app.layout = dbc.Container(
     Output(bar, "figure"),
     Output(bar2, "figure"),
     Output(mytitle, "children"),
-    Output(mysubtitle, "children"),
+    # Output(mysubtitle, "children"),
     Input("myslider1", "value"),
     Input("myslider2", "value"),
     Input("myslider3", "value"),
