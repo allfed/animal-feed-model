@@ -302,12 +302,9 @@ def update_graph(
             current_pig_slaughter = current_total_pigs
             current_cow_slaughter += spare_slaughter_hours / cow_slaughter_hours
 
-
         # this set up only kills dairy cows when they are getting to the end of their life.
         current_dairy_slaughter = current_dairy_cattle / (dairy_life_expectancy * 12)
         current_beef_slaughter = current_cow_slaughter - current_dairy_slaughter
-
-
 
         other_beef_death = other_cow_death_rate * current_beef_cattle
         other_dairy_death = other_cow_death_rate * current_dairy_cattle
