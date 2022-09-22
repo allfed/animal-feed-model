@@ -39,7 +39,7 @@ controls = dbc.Card(
                 dcc.Slider(
                     0,
                     100,
-                    value=100,
+                    value=00,
                     id="myslider1",
                     updatemode="drag",
                     tooltip={"placement": "bottom", "always_visible": True},
@@ -52,7 +52,7 @@ controls = dbc.Card(
                 dcc.Slider(
                     0,
                     100,
-                    value=20,
+                    value=0,
                     id="myslider2",
                     updatemode="drag",
                     tooltip={"placement": "bottom", "always_visible": True},
@@ -61,7 +61,7 @@ controls = dbc.Card(
         ),
         html.Div(
             [
-                dbc.Label("Increase Slaughter Rate"),
+                dbc.Label("Baseline Slaughter Rate"),
                 dcc.Slider(
                     0,
                     600,
@@ -78,7 +78,7 @@ controls = dbc.Card(
                 dcc.Slider(
                     0,
                     100,
-                    value=20,
+                    value=0,
                     id="myslider4",
                     updatemode="drag",
                     tooltip={"placement": "bottom", "always_visible": True},
@@ -91,7 +91,7 @@ controls = dbc.Card(
                 dcc.Slider(
                     0,
                     100,
-                    value=20,
+                    value=0,
                     id="myslider5",
                     updatemode="drag",
                     tooltip={"placement": "bottom", "always_visible": True},
