@@ -28,6 +28,7 @@ mytitle = dcc.Markdown(children="")
 scatter = dcc.Graph(figure={})
 bar = dcc.Graph(figure={})
 bar2 = dcc.Graph(figure={})
+bar3 = dcc.Graph(figure={})
 
 ### Create slider components on a card
 controls = dbc.Card(
@@ -131,6 +132,7 @@ app.layout = dbc.Container(
         ),
         html.Hr(),
         dbc.Row([dbc.Col([bar2], width=12)], justify="center"),
+        dbc.Row([dbc.Col([bar3], width=12)], justify="center"),
     ],
     fluid=True,
 )
@@ -142,6 +144,7 @@ app.layout = dbc.Container(
     # Output(scatter, "figure"),
     Output(bar, "figure"),
     Output(bar2, "figure"),
+    Output(bar3, "figure"),
     Output(mytitle, "children"),
     # Output(mysubtitle, "children"),
     Input("myslider1", "value"),
@@ -287,27 +290,60 @@ def update_graph(
 
         # Transfer excess slaughter capacity to next animal, current coding method only allows poultry -> pig -> cow
         if current_total_poultry < current_poultry_slaughter:
-            spare_slaughter_hours += (
-                current_poultry_slaughter - current_total_pigs
+            spare_slaughter_hours = (
+                current_poultry_slaughter - current_total_poultry
             ) * poultry_slaughter_hours
             current_poultry_slaughter = current_total_poultry
             current_pig_slaughter += spare_slaughter_hours / pig_slaughter_hours
         if current_total_pigs < current_pig_slaughter:
-            spare_slaughter_hours += (
+            spare_slaughter_hours = (
                 current_pig_slaughter - current_total_pigs
             ) * pig_slaughter_hours
             current_pig_slaughter = current_total_pigs
             current_cow_slaughter += spare_slaughter_hours / cow_slaughter_hours
 
-        # other death
+
+        # this set up only kills dairy cows when they are getting to the end of their life.
+        current_dairy_slaughter = current_dairy_cattle / (dairy_life_expectancy * 12)
+        current_beef_slaughter = current_cow_slaughter - current_dairy_slaughter
+
+
+
         other_beef_death = other_cow_death_rate * current_beef_cattle
         other_dairy_death = other_cow_death_rate * current_dairy_cattle
         other_pig_death = current_total_pigs * other_pig_death_rate
         other_poultry_death = current_total_poultry * other_poultry_death_rate
 
-        # this set up only kills dairy cows when they are getting to the end of their life.
-        current_dairy_slaughter = current_dairy_cattle / (dairy_life_expectancy * 12)
-        current_beef_slaughter = current_cow_slaughter - current_dairy_slaughter
+        ### Generate list (before new totals have been calculated)
+        d.append(
+            {
+                "Beef Pop": current_beef_cattle,
+                "Beef Born": new_beef_calfs_pm,
+                "Beef Slaughtered": current_beef_slaughter,
+                "Beef Slaughtered Hours": current_beef_slaughter*cow_slaughter_hours,
+                "Beef Other Death": other_beef_death,
+                "Beef Feed": current_beef_cattle * beef_cow_feed_pm_per_cow,
+                "Dairy Pop": current_dairy_cattle,
+                "Dairy Born": new_dairy_calfs_pm,
+                "Dairy Slaughtered": current_dairy_slaughter,
+                "Dairy Slaughtered Hours": current_dairy_slaughter*cow_slaughter_hours,
+                "Dairy Other Death": other_dairy_death,
+                "Dairy Feed": current_dairy_cattle * dairy_cow_feed_pm_per_cow,
+                "Pigs Pop": current_total_pigs,
+                "Pig Pop": current_total_pigs,
+                "Pig Born": new_pigs_pm,
+                "Pig Slaughtered": current_pig_slaughter,
+                "Pig Slaughtered Hours": current_pig_slaughter * pig_slaughter_hours,
+                "Pigs Feed": current_total_pigs * pig_feed_pm_per_pig,
+                "Poultry Pop": current_total_poultry,
+                "Poultry Pop": current_total_poultry,
+                "Poultry Born": new_poultry_pm,
+                "Poultry Slaughtered": current_poultry_slaughter,
+                "Poultry Slaughtered Hours": current_poultry_slaughter * poultry_slaughter_hours,
+                "Poultry Feed": current_total_poultry * poultry_feed_pm_per_bird,
+                "Month": i,
+            }
+        )
 
         # some up new totals
         current_beef_cattle += (
@@ -327,31 +363,6 @@ def update_graph(
         if current_dairy_cattle < 0:
             current_dairy_cattle = 0
 
-        d.append(
-            {
-                "Beef Pop": current_beef_cattle,
-                "Beef Born": new_beef_calfs_pm,
-                "Beef Slaughtered": current_beef_slaughter,
-                "Beef Other Death": other_beef_death,
-                "Beef Feed": current_beef_cattle * beef_cow_feed_pm_per_cow,
-                "Dairy Pop": current_dairy_cattle,
-                "Dairy Born": new_dairy_calfs_pm,
-                "Dairy Slaughtered": current_dairy_slaughter,
-                "Dairy Other Death": other_dairy_death,
-                "Dairy Feed": current_dairy_cattle * dairy_cow_feed_pm_per_cow,
-                "Pigs Pop": current_total_pigs,
-                "pig Pop": current_total_pigs,
-                "pig Born": new_pigs_pm,
-                "pig Slaughtered": current_pig_slaughter,
-                "Pigs Feed": current_total_pigs * pig_feed_pm_per_pig,
-                "Poultry Pop": current_total_poultry,
-                "poultry Pop": current_total_poultry,
-                "poultry Born": new_poultry_pm,
-                "poultry Slaughtered": current_poultry_slaughter,
-                "Poultry Feed": current_total_poultry * poultry_feed_pm_per_bird,
-                "Month": i,
-            }
-        )
 
     df_final = pd.DataFrame(d)
     print(df_final)
@@ -372,10 +383,18 @@ def update_graph(
         title="Feed Usage",
     )
 
+    fig4 = px.bar(
+        df_final,
+        x="Month",
+        y=["Beef Slaughtered Hours","Dairy Slaughtered Hours","Pig Slaughtered Hours","Poultry Slaughtered Hours"],
+        title="Slaughter Worker Hours",
+    )
+
     return (
         # fig1,
         fig2,
         fig3,
+        fig4,
         "# " "Livestock Population",
         # "Modelled beef and dairy industry",
     )  # returned objects are assigned to the component property of the Output
