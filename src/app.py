@@ -9,13 +9,14 @@ import dash_bootstrap_components as dbc  # pip install dash-bootstrap-components
 """
 Start main function
 """
-# find dataframe
+# Create dataframes
 PATH = pathlib.Path(__file__).parent
 DATA_PATH = PATH.joinpath("../data").resolve()
 df = pd.read_csv(DATA_PATH.joinpath("NassCattle2022.csv"), index_col="Variable")
 df2 = pd.read_csv(DATA_PATH.joinpath("NassPigs2022.csv"), index_col="Variable")
 df["Qty"] = df["Qty"].astype("float")
 
+#### Do Dash things below, skip ahead to callback function for the main event
 # Build your components
 app = Dash(__name__, external_stylesheets=[dbc.themes.LUX])
 
@@ -134,6 +135,8 @@ app.layout = dbc.Container(
     fluid=True,
 )
 
+
+#### Callback function here, this is where it all happens
 # Callback allows components to interact
 @app.callback(
     # Output(scatter, "figure"),
@@ -155,8 +158,9 @@ def update_graph(
     reduction_in_pig_breeding,
     reduction_in_poultry_breeding,
     months,
-):  # function arguments come from the component property of the Input
+):  # function arguments come from the component property of the Input (in this case, the sliders)
 
+    ## unpack all the dataframe information for ease of use ##
     # pigs
     total_pigs = df2.loc["TotalPigs", "Qty"]
     piglets_pm = df2.loc["PigletsPerMonth", "Qty"]
@@ -171,7 +175,7 @@ def update_graph(
     poultryGestation = 1  # actaully 21 days, let's round to 1 month
     poultry_feed_pm_per_bird = 20
 
-    # cows
+    # cows (more complex, as need to split dairy and beef)
     total_calves = df.loc["Calves under 500 pounds", "Qty"]
     dairy_cows = df.loc["Milk cows", "Qty"]
     beef_cows = df.loc["Beef cows", "Qty"]
@@ -184,22 +188,6 @@ def update_graph(
     cowGestation = df.loc["cowGestation", "Qty"]
     beef_cow_feed_pm_per_cow = 661
     dairy_cow_feed_pm_per_cow = 1048
-
-    # total slaughter capacity
-    cow_slaughter_hours = (
-        8  # resources/hours of single person hours for slaughter of cow
-    )
-    pig_slaughter_hours = (
-        4  # resources/hours of single person hours for slaughter of pig
-    )
-    poultry_slaughter_hours = (
-        0.08  # resources/hours of single person hours for slaughter of poultry
-    )
-    total_slaughter_cap_hours = (
-        cow_slaughter_pm * cow_slaughter_hours
-        + pigs_slaughter_pm * pig_slaughter_hours
-        + poultry_slaughter_pm * poultry_slaughter_hours
-    )
 
     #### Calcultaion for cows ratios
     # calaculate number of cows using ratios
@@ -221,27 +209,39 @@ def update_graph(
     cattle_in_beef_track = (
         dairy_calf_steers + beef_calves + beef_steers + beef_cows + beef_heifers
     )
-    cattle_in_dairy_rack = dairy_calf_girls + dairy_cows + dairy_heifers
+    cattle_in_dairy_track = dairy_calf_girls + dairy_cows + dairy_heifers
 
     # other baseline variables
     dairy_life_expectancy = 5
 
-    # interventions, scale appropriately for maths
+    ## End cows, and basic animal variable defintiions ##
+
+    # interventions, scale appropriately for maths (i.e convert sliders from % to decimal)
     reduction_in_beef_calves *= 0.01
     reduction_in_dairy_calves *= 0.01
     reduction_in_pig_breeding *= 0.01
     reduction_in_poultry_breeding *= 0.01
     increase_in_slaughter *= 0.01
 
-    ## define current totals
-    # current_beef_feed_cattle = cattle_on_feed
-    current_beef_cattle = cattle_in_beef_track
-    current_dairy_cattle = cattle_in_dairy_rack
-    current_total_cattle = cattle_in_dairy_rack + cattle_in_beef_track
-    current_total_pigs = total_pigs
-    current_total_poultry = total_poultry
+    #### Slaughtering ####
+    ### Slaughtering variables (currently hardcoded !!)
+    # total slaughter capacity
+    cow_slaughter_hours = (
+        8  # resources/hours of single person hours for slaughter of cow
+    )
+    pig_slaughter_hours = (
+        4  # resources/hours of single person hours for slaughter of pig
+    )
+    poultry_slaughter_hours = (
+        0.08  # resources/hours of single person hours for slaughter of poultry
+    )
+    total_slaughter_cap_hours = (
+        cow_slaughter_pm * cow_slaughter_hours
+        + pigs_slaughter_pm * pig_slaughter_hours
+        + poultry_slaughter_pm * poultry_slaughter_hours
+    )
 
-    # ibcreases from slider
+    ## Slaughtering Updates, increases from slider
     total_slaughter_cap_hours *= increase_in_slaughter  # measured in hours
     current_cow_slaughter = cow_slaughter_pm * increase_in_slaughter  # measured in head
     current_poultry_slaughter = (
@@ -252,7 +252,15 @@ def update_graph(
     )  # measured in head
     spare_slaughter_hours = 0
 
-    # per month
+
+    ## define current totals
+    # current_beef_feed_cattle = cattle_on_feed
+    current_beef_cattle = cattle_in_beef_track
+    current_dairy_cattle = cattle_in_dairy_track
+    current_total_pigs = total_pigs
+    current_total_poultry = total_poultry
+
+    # per month values
     other_cow_death_rate = 0.005  #
     other_pig_death_rate = 0.005
     other_poultry_death_rate = 0.005
@@ -261,8 +269,9 @@ def update_graph(
     new_pigs_pm = piglets_pm
     new_poultry_pm = chicks_pm
 
-    d = []  # temp list
+    d = []  # create empty list to place variables in to in loop
 
+    # simulate x months
     for i in range(months):
 
         # determine birth rates
@@ -276,10 +285,7 @@ def update_graph(
         if np.abs(i - poultryGestation) <= 0.5:
             new_poultry_pm *= 1 - reduction_in_poultry_breeding
 
-        # if current_beef_cattle < 0:
-        #     current_beef_cattle = 0
-        # if current_dairy_cattle < 0:
-        #     current_dairy_cattle = 0
+        # Transfer excess slaughter capacity to next animal, current coding method only allows poultry -> pig -> cow
         if current_total_poultry < current_poultry_slaughter:
             spare_slaughter_hours += (
                 current_poultry_slaughter - current_total_pigs
@@ -373,7 +379,6 @@ def update_graph(
         "# " "Livestock Population",
         # "Modelled beef and dairy industry",
     )  # returned objects are assigned to the component property of the Output
-
 
 # Run app
 if __name__ == "__main__":
