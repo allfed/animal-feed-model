@@ -288,7 +288,7 @@ def update_graph(
         if np.abs(i - poultryGestation) <= 0.5:
             new_poultry_pm *= 1 - reduction_in_poultry_breeding
 
-        # Transfer excess slaughter capacity to next animal, current coding method only allows poultry -> pig -> cow
+        # Transfer excess slaughter capacity to next animal, current coding method only allows poultry -> pig -> cow, there are some small erros here due to rounding, and the method is not 100% water tight but errors are within the noise
         if current_total_poultry < current_poultry_slaughter:
             spare_slaughter_hours = (
                 current_poultry_slaughter - current_total_poultry
@@ -305,6 +305,13 @@ def update_graph(
         # this set up only kills dairy cows when they are getting to the end of their life.
         current_dairy_slaughter = current_dairy_cattle / (dairy_life_expectancy * 12)
         current_beef_slaughter = current_cow_slaughter - current_dairy_slaughter
+        if current_beef_cattle < current_beef_slaughter:
+            actual_beef_slaughter = current_beef_cattle #required due to the difference between actual slaughter and 'slaughter capacity' consider a rewrite of the whole method to distinuguish between these two. For now, this is thr workaround.
+        else: 
+            actual_beef_slaughter = current_beef_slaughter
+
+
+
 
         other_beef_death = other_cow_death_rate * current_beef_cattle
         other_dairy_death = other_cow_death_rate * current_dairy_cattle
@@ -316,8 +323,8 @@ def update_graph(
             {
                 "Beef Pop": current_beef_cattle,
                 "Beef Born": new_beef_calfs_pm,
-                "Beef Slaughtered": current_beef_slaughter,
-                "Beef Slaughtered Hours": current_beef_slaughter*cow_slaughter_hours,
+                "Beef Slaughtered": actual_beef_slaughter,
+                "Beef Slaughtered Hours": actual_beef_slaughter*cow_slaughter_hours,
                 "Beef Other Death": other_beef_death,
                 "Beef Feed": current_beef_cattle * beef_cow_feed_pm_per_cow,
                 "Dairy Pop": current_dairy_cattle,
@@ -353,20 +360,15 @@ def update_graph(
             new_poultry_pm - current_poultry_slaughter - other_poultry_death
         )
         current_total_pigs += new_pigs_pm - current_pig_slaughter - other_pig_death
-        current_total_cattle = current_beef_cattle + current_dairy_cattle
 
         if current_beef_cattle < 0:
             current_beef_cattle = 0
         if current_dairy_cattle < 0:
             current_dairy_cattle = 0
 
-
     df_final = pd.DataFrame(d)
-    print(df_final)
 
-    # https://plotly.com/python/scatterpleth-maps/
     # fig1 = px.scatter(df_final, x="Month", y="Total Cattle Pop") #range_y=[0000,100000]
-    # fig2 = px.bar(df_final, x="Month", y="Total Pop")
     fig2 = px.bar(
         df_final,
         x="Month",
@@ -384,7 +386,7 @@ def update_graph(
         df_final,
         x="Month",
         y=["Beef Slaughtered Hours","Dairy Slaughtered Hours","Pig Slaughtered Hours","Poultry Slaughtered Hours"],
-        title="Slaughter Worker Hours",
+        title="Slaughter Worker Hours Distribution",
     )
 
     return (
