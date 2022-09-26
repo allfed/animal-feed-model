@@ -243,6 +243,12 @@ def update_graph(
         + pigs_slaughter_pm * pig_slaughter_hours
         + poultry_slaughter_pm * poultry_slaughter_hours
     )
+    skill_transfer_discount_chickens_to_pigs = (
+        0.5  # resources/hours of single person hours for slau
+    )
+    skill_transfer_discount_pigs_to_cows = (
+        0.5  # resources/hours of single person hours for slau
+    )
 
     ## Slaughtering Updates, increases from slider
     total_slaughter_cap_hours *= increase_in_slaughter  # measured in hours
@@ -294,13 +300,13 @@ def update_graph(
                 current_poultry_slaughter - current_total_poultry
             ) * poultry_slaughter_hours
             current_poultry_slaughter = current_total_poultry
-            current_pig_slaughter += spare_slaughter_hours / pig_slaughter_hours
+            current_pig_slaughter += spare_slaughter_hours * skill_transfer_discount_chickens_to_pigs / pig_slaughter_hours
         if current_total_pigs < current_pig_slaughter:
             spare_slaughter_hours = (
                 current_pig_slaughter - current_total_pigs
             ) * pig_slaughter_hours
             current_pig_slaughter = current_total_pigs
-            current_cow_slaughter += spare_slaughter_hours / cow_slaughter_hours
+            current_cow_slaughter += spare_slaughter_hours * skill_transfer_discount_pigs_to_cows / cow_slaughter_hours
 
         # this set up only kills dairy cows when they are getting to the end of their life.
         current_dairy_slaughter = current_dairy_cattle / (dairy_life_expectancy * 12)
