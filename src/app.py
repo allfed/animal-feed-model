@@ -36,6 +36,31 @@ controls = dbc.Card(
         dbc.Label("Change the interventions to see effect on cow population"),
         html.Div(
             [
+                dbc.Label("Baseline Slaughter Rate"),
+                dcc.Slider(
+                    0,
+                    600,
+                    value=100,
+                    id="myslider3",
+                    updatemode="drag",
+                    tooltip={"placement": "bottom", "always_visible": True},
+                ),
+            ]
+        ),        html.Div(
+            [
+                dbc.Label("Discount Rate for Labour/Technology Transfer between species"),
+                dcc.Slider(
+                    0,
+                    100,
+                    value=50,
+                    id="myslider7",
+                    updatemode="drag",
+                    tooltip={"placement": "bottom", "always_visible": True},
+                ),
+            ]
+        ),
+        html.Div(
+            [
                 dbc.Label("Decrease Beef Birth Rate"),
                 dcc.Slider(
                     0,
@@ -60,19 +85,7 @@ controls = dbc.Card(
                 ),
             ]
         ),
-        html.Div(
-            [
-                dbc.Label("Baseline Slaughter Rate"),
-                dcc.Slider(
-                    0,
-                    600,
-                    value=100,
-                    id="myslider3",
-                    updatemode="drag",
-                    tooltip={"placement": "bottom", "always_visible": True},
-                ),
-            ]
-        ),
+
         html.Div(
             [
                 dbc.Label("Pig Breeding"),
@@ -153,6 +166,7 @@ app.layout = dbc.Container(
     Input("myslider4", "value"),
     Input("myslider5", "value"),
     Input("myslider6", "value"),
+    Input("myslider7", "value"),
 )
 def update_graph(
     reduction_in_beef_calves,
@@ -161,6 +175,7 @@ def update_graph(
     reduction_in_pig_breeding,
     reduction_in_poultry_breeding,
     months,
+    discount_rate
 ):  # function arguments come from the component property of the Input (in this case, the sliders)
 
     ## unpack all the dataframe information for ease of use ##
@@ -244,10 +259,10 @@ def update_graph(
         + poultry_slaughter_pm * poultry_slaughter_hours
     )
     skill_transfer_discount_chickens_to_pigs = (
-        0.5  # resources/hours of single person hours for slau
+        (100-discount_rate)/100  # 
     )
     skill_transfer_discount_pigs_to_cows = (
-        0.5  # resources/hours of single person hours for slau
+        (100-discount_rate)/100  # 
     )
 
     ## Slaughtering Updates, increases from slider
@@ -385,9 +400,8 @@ def update_graph(
         df_final,
         x="Month",
         y=["Beef Feed", "Dairy Feed", "Pigs Feed", "Poultry Feed"],
-        title="Feed Usage",
+        title="Feed Requirements (Dry Matter Equivalent)",
     )
-
     fig4 = px.bar(
         df_final,
         x="Month",
