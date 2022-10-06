@@ -149,7 +149,7 @@ controls = dbc.Card(
 # Customize your own Layout
 app.layout = dbc.Container(
     [
-        # dbc.Row([dbc.Col([mytitle], width=6)], justify="center"),
+        dbc.Row([dbc.Col([mytitle], width=6)], justify="center"),
         # dbc.Row([dbc.Col([mysubtitle], width=6)], justify="center"),
         dbc.Row(
             [
@@ -163,7 +163,7 @@ app.layout = dbc.Container(
         dbc.Row([dbc.Col([bar3], width=12)], justify="center"),
         dbc.Row([dbc.Col([bar4], width=12)], justify="center"),
         dbc.Row([dbc.Col([scatter], width=12)], justify="center"),
-        # dbc.Row([dbc.Col([scatter2], width=12)], justify="center"),
+        dbc.Row([dbc.Col([scatter2], width=12)], justify="center"),
     ],
     fluid=True,
 )
@@ -232,20 +232,6 @@ def update_graph(
     calves_per_mother = 1
 
 
-    ### FEED
-    # beef_cow_feed_pm_per_cow = 880 # lbs
-    # dairy_cow_feed_pm_per_cow = 1048
-    # poultry_feed_pm_per_bird = 20
-    # pig_feed_pm_per_pig = 139
-
-
-    beef_cow_feed_pm_per_cow = 137.3117552 # lbs
-    dairy_cow_feed_pm_per_cow = 448.3820431
-    poultry_feed_pm_per_bird = 4.763762808
-    pig_feed_pm_per_pig = 141.8361586
-    baseline_feed = total_poultry*poultry_feed_pm_per_bird +   total_pigs*pig_feed_pm_per_pig + beef_cow_feed_pm_per_cow*beef_cows + dairy_cow_feed_pm_per_cow*dairy_cows
-
-
 
 
     #### Calcultaion for cows ratios
@@ -290,6 +276,9 @@ def update_graph(
     new_dairy_calfs_pm = (new_dairy_calfs / 12) 
     new_pigs_pm = piglets_pm
     new_poultry_pm = chicks_pm
+
+
+
 
     # pregnant animals
     current_pregnant_sows = piglets_pm/piglets_per_litter
@@ -340,6 +329,22 @@ def update_graph(
     current_dairy_cattle = cattle_in_dairy_track
     current_total_pigs = total_pigs
     current_total_poultry = total_poultry
+
+
+
+    ### FEED
+    # beef_cow_feed_pm_per_cow = 880 # lbs
+    # dairy_cow_feed_pm_per_cow = 1048
+    # poultry_feed_pm_per_bird = 20
+    # pig_feed_pm_per_pig = 139
+
+    beef_cow_feed_pm_per_cow = 137.3117552 # lbs
+    dairy_cow_feed_pm_per_cow = 448.3820431
+    poultry_feed_pm_per_bird = 4.763762808
+    pig_feed_pm_per_pig = 141.8361586
+    baseline_feed = current_total_poultry*poultry_feed_pm_per_bird +   current_total_pigs*pig_feed_pm_per_pig + current_beef_cattle*beef_cow_feed_pm_per_cow + dairy_cow_feed_pm_per_cow*current_dairy_cattle
+
+
 
     d = []  # create empty list to place variables in to in loop
 
@@ -408,8 +413,10 @@ def update_graph(
         current_poultry_feed = current_total_poultry * poultry_feed_pm_per_bird
         total_current_feed = current_beef_feed + current_dairy_feed + current_pig_feed + current_poultry_feed
         current_feed_saved = baseline_feed - total_current_feed 
-        print(baseline_feed)
-        print(total_current_feed)
+
+        # print(baseline_feed * magnitude_adjust *feed_unit_adjust)
+        print(current_poultry_feed* magnitude_adjust *feed_unit_adjust)
+        print(total_current_feed * magnitude_adjust *feed_unit_adjust)
 
         ### Generate list (before new totals have been calculated)
         # magnitude adjust moves the numbers from per thousnad head to per head (or other)
@@ -468,7 +475,7 @@ def update_graph(
             current_dairy_cattle = 0
 
     df_final = pd.DataFrame(d)
-    total_feed_saved = df_final["Feed Saved"].sum()/(2000 * 10^6)# million tons
+    total_feed_saved = df_final["Feed Saved"].sum() * magnitude_adjust *feed_unit_adjust # million tons
 
 
     fig1 = px.line(df_final, x="Month", y=["Beef Born","Dairy Born","Pig Born","Poultry Born"]) #range_y=[0000,100000]
