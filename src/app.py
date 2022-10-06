@@ -34,7 +34,6 @@ bar4 = dcc.Graph(figure={})
 ### Create slider components on a card
 controls = dbc.Card(
     [
-        dbc.Label("Change the interventions to see effect on cow population"),
         html.Div(
             [
                 dbc.Label("Baseline Slaughter Rate"),
@@ -48,7 +47,6 @@ controls = dbc.Card(
                 ),
             ]
         ),
-        dbc.Label("Change the interventions to see effect on cow population"),
         html.Div(
             [
                 dbc.Label("Proportion of Slaughter which is mothers"), # (proxy for termination of pregnancies too, but not the same as a percentage)
