@@ -26,6 +26,7 @@ server = app.server  # for heroku deployment
 mytitle = dcc.Markdown(children="")
 # mysubtitle = dcc.Markdown(children="")
 scatter = dcc.Graph(figure={})
+scatter2 = dcc.Graph(figure={})
 bar = dcc.Graph(figure={})
 bar2 = dcc.Graph(figure={})
 bar3 = dcc.Graph(figure={})
@@ -148,7 +149,7 @@ controls = dbc.Card(
 # Customize your own Layout
 app.layout = dbc.Container(
     [
-        dbc.Row([dbc.Col([mytitle], width=6)], justify="center"),
+        # dbc.Row([dbc.Col([mytitle], width=6)], justify="center"),
         # dbc.Row([dbc.Col([mysubtitle], width=6)], justify="center"),
         dbc.Row(
             [
@@ -162,6 +163,7 @@ app.layout = dbc.Container(
         dbc.Row([dbc.Col([bar3], width=12)], justify="center"),
         dbc.Row([dbc.Col([bar4], width=12)], justify="center"),
         dbc.Row([dbc.Col([scatter], width=12)], justify="center"),
+        # dbc.Row([dbc.Col([scatter2], width=12)], justify="center"),
     ],
     fluid=True,
 )
@@ -175,6 +177,7 @@ app.layout = dbc.Container(
     Output(bar2, "figure"),
     Output(bar3, "figure"),
     Output(bar4, "figure"),
+    Output(scatter2, "figure"),
     Output(mytitle, "children"),
     # Output(mysubtitle, "children"),
     Input("myslider1", "value"),
@@ -240,6 +243,7 @@ def update_graph(
     dairy_cow_feed_pm_per_cow = 448.3820431
     poultry_feed_pm_per_bird = 4.763762808
     pig_feed_pm_per_pig = 141.8361586
+    baseline_feed = total_poultry*poultry_feed_pm_per_bird +   total_pigs*pig_feed_pm_per_pig + beef_cow_feed_pm_per_cow*beef_cows + dairy_cow_feed_pm_per_cow*dairy_cows
 
 
 
@@ -293,9 +297,6 @@ def update_graph(
     sow_slaughter_percent = mother_slaughter # of total percent of pig slaughter
     mother_cow_slaughter_percent = mother_slaughter # of total percent of cow slaughter
 
-
-    print(new_pigs_pm)
-    print(current_pregnant_sows)
 
     #### Slaughtering ####
     ### Slaughtering variables (currently hardcoded !!)
@@ -400,6 +401,16 @@ def update_graph(
         other_pig_death = current_total_pigs * other_pig_death_rate
         other_poultry_death = current_total_poultry * other_poultry_death_rate
 
+        ## Feed
+        current_beef_feed = current_beef_cattle * beef_cow_feed_pm_per_cow 
+        current_dairy_feed =  current_dairy_cattle * dairy_cow_feed_pm_per_cow 
+        current_pig_feed = current_total_pigs * pig_feed_pm_per_pig
+        current_poultry_feed = current_total_poultry * poultry_feed_pm_per_bird
+        total_current_feed = current_beef_feed + current_dairy_feed + current_pig_feed + current_poultry_feed
+        current_feed_saved = baseline_feed - total_current_feed 
+        print(baseline_feed)
+        print(total_current_feed)
+
         ### Generate list (before new totals have been calculated)
         # magnitude adjust moves the numbers from per thousnad head to per head (or other)
         d.append(
@@ -430,6 +441,7 @@ def update_graph(
                 "Poultry Slaughtered Hours": current_poultry_slaughter * poultry_slaughter_hours * magnitude_adjust,
                 "Poultry Slaughtered Hours %": current_poultry_slaughter  * poultry_slaughter_hours/ total_slaughter_cap_hours,
                 "Poultry Feed": current_total_poultry * poultry_feed_pm_per_bird * magnitude_adjust *feed_unit_adjust,
+                "Feed Saved": current_feed_saved,
                 "Month": i,
             }
         )
@@ -456,6 +468,8 @@ def update_graph(
             current_dairy_cattle = 0
 
     df_final = pd.DataFrame(d)
+    total_feed_saved = df_final["Feed Saved"].sum()/(2000 * 10^6)# million tons
+
 
     fig1 = px.line(df_final, x="Month", y=["Beef Born","Dairy Born","Pig Born","Poultry Born"]) #range_y=[0000,100000]
     fig2 = px.bar(
@@ -482,6 +496,9 @@ def update_graph(
         y=["Beef Slaughtered","Dairy Slaughtered","Pig Slaughtered","Poultry Slaughtered"],
         title="Slaughter Counts Distribution",
     )
+    fig6 = px.line(df_final, x="Month", y=["Feed Saved"])
+
+
 
     return (
         fig1,
@@ -489,7 +506,8 @@ def update_graph(
         fig3,
         fig4,
         fig5,
-        "# " "Livestock Population",
+        fig6,
+        f"# Total Feed Use Reduction, {total_feed_saved.round()} million tons" 
         # "Modelled beef and dairy industry",
     )  # returned objects are assigned to the component property of the Output
 
