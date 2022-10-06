@@ -29,6 +29,7 @@ scatter = dcc.Graph(figure={})
 bar = dcc.Graph(figure={})
 bar2 = dcc.Graph(figure={})
 bar3 = dcc.Graph(figure={})
+bar4 = dcc.Graph(figure={})
 
 ### Create slider components on a card
 controls = dbc.Card(
@@ -146,6 +147,8 @@ app.layout = dbc.Container(
         html.Hr(),
         dbc.Row([dbc.Col([bar2], width=12)], justify="center"),
         dbc.Row([dbc.Col([bar3], width=12)], justify="center"),
+        dbc.Row([dbc.Col([bar4], width=12)], justify="center"),
+        dbc.Row([dbc.Col([scatter], width=12)], justify="center"),
     ],
     fluid=True,
 )
@@ -154,10 +157,11 @@ app.layout = dbc.Container(
 #### Callback function here, this is where it all happens
 # Callback allows components to interact
 @app.callback(
-    # Output(scatter, "figure"),
+    Output(scatter, "figure"),
     Output(bar, "figure"),
     Output(bar2, "figure"),
     Output(bar3, "figure"),
+    Output(bar4, "figure"),
     Output(mytitle, "children"),
     # Output(mysubtitle, "children"),
     Input("myslider1", "value"),
@@ -178,6 +182,7 @@ def update_graph(
     discount_rate
 ):  # function arguments come from the component property of the Input (in this case, the sliders)
 
+    poultry_visual_optimiser = 20
     ## unpack all the dataframe information for ease of use ##
     # pigs
     total_pigs = df2.loc["TotalPigs", "Qty"]
@@ -185,13 +190,15 @@ def update_graph(
     pigs_slaughter_pm = df2.loc["SlaughterPerMonth", "Qty"]
     pigGestation = df2.loc["pigGestation", "Qty"]
     pig_feed_pm_per_pig = 139
+    piglets_per_litter = 7.5
 
     # poultry
-    total_poultry = 2127170289 / 1000  # USDA
+    total_poultry = 2127170289 / 1000  # USDA everything is in 1000 head, so divide this number by 1000
     poultry_slaughter_pm = 853670.0  # USDA
     chicks_pm = poultry_slaughter_pm  # assume the same, no data
     poultryGestation = 1  # actaully 21 days, let's round to 1 month
     poultry_feed_pm_per_bird = 20
+
 
     # cows (more complex, as need to split dairy and beef)
     total_calves = df.loc["Calves under 500 pounds", "Qty"]
@@ -206,6 +213,7 @@ def update_graph(
     cowGestation = df.loc["cowGestation", "Qty"]
     beef_cow_feed_pm_per_cow = 661
     dairy_cow_feed_pm_per_cow = 1048
+    calves_per_mother = 1
 
     #### Calcultaion for cows ratios
     # calaculate number of cows using ratios
@@ -241,11 +249,30 @@ def update_graph(
     reduction_in_poultry_breeding *= 0.01
     increase_in_slaughter *= 0.01
 
+    # per month values
+    other_cow_death_rate = 0.005    # from USDA
+    other_pig_death_rate = 0.005    # from USDA
+    other_poultry_death_rate = 0.005
+    new_beef_calfs_pm = (new_beef_calfs / 12) 
+    new_dairy_calfs_pm = (new_dairy_calfs / 12) 
+    new_pigs_pm = piglets_pm
+    new_poultry_pm = chicks_pm
+
+    # pregnant animals
+    current_pregnant_sows = piglets_pm/piglets_per_litter
+    current_pregnant_cows = new_beef_calfs_pm/calves_per_mother
+    sow_slaughter_percent = 0.00 # of total percent of pig slaughter
+    mother_cow_slaughter_percent = 0.00 # of total percent of cow slaughter
+
+
+    print(new_pigs_pm)
+    print(current_pregnant_sows)
+
     #### Slaughtering ####
     ### Slaughtering variables (currently hardcoded !!)
     # total slaughter capacity
     cow_slaughter_hours = (
-        8  # resources/hours of single person hours for slaughter of cow
+        4  # resources/hours of single person hours for slaughter of cow
     )
     pig_slaughter_hours = (
         4  # resources/hours of single person hours for slaughter of pig
@@ -284,30 +311,35 @@ def update_graph(
     current_total_pigs = total_pigs
     current_total_poultry = total_poultry
 
-    # per month values
-    other_cow_death_rate = 0.005  #
-    other_pig_death_rate = 0.005
-    other_poultry_death_rate = 0.005
-    new_beef_calfs_pm = (new_beef_calfs / 12) * (1 - reduction_in_beef_calves)
-    new_dairy_calfs_pm = (new_dairy_calfs / 12) * (1 - reduction_in_dairy_calves)
-    new_pigs_pm = piglets_pm
-    new_poultry_pm = chicks_pm
-
     d = []  # create empty list to place variables in to in loop
 
     # simulate x months
     for i in range(months):
+        
+        new_pigs_pm = current_pregnant_sows*piglets_per_litter
+        new_beef_calfs_pm = current_pregnant_cows*calves_per_mother
+        
+        print(f"Current sows pregnant is, {current_pregnant_sows}. And cows is {current_pregnant_cows}.")
 
         # determine birth rates
         if np.abs(i - cowGestation) <= 0.5:
             new_beef_calfs_pm *= 1 - reduction_in_beef_calves
             new_dairy_calfs_pm *= 1 - reduction_in_dairy_calves
+            current_pregnant_cows *= 1 - reduction_in_beef_calves
 
         if np.abs(i - pigGestation) <= 0.5:
             new_pigs_pm *= 1 - reduction_in_pig_breeding
+            current_pregnant_sows *= 1 - reduction_in_pig_breeding
+
 
         if np.abs(i - poultryGestation) <= 0.5:
             new_poultry_pm *= 1 - reduction_in_poultry_breeding
+
+        if new_pigs_pm < 0:
+            new_pigs_pm = 0
+
+        if new_beef_calfs_pm < 0:
+            new_beef_calfs_pm = 0
 
         # Transfer excess slaughter capacity to next animal, current coding method only allows poultry -> pig -> cow, there are some small erros here due to rounding, and the method is not 100% water tight but errors are within the noise
         if current_total_poultry < current_poultry_slaughter:
@@ -355,15 +387,13 @@ def update_graph(
                 "Dairy Other Death": other_dairy_death,
                 "Dairy Feed": current_dairy_cattle * dairy_cow_feed_pm_per_cow,
                 "Pigs Pop": current_total_pigs,
-                "Pig Pop": current_total_pigs,
                 "Pig Born": new_pigs_pm,
                 "Pig Slaughtered": current_pig_slaughter,
                 "Pig Slaughtered Hours": current_pig_slaughter * pig_slaughter_hours,
                 "Pigs Feed": current_total_pigs * pig_feed_pm_per_pig,
-                "Poultry Pop": current_total_poultry,
-                "Poultry Pop": current_total_poultry,
-                "Poultry Born": new_poultry_pm,
-                "Poultry Slaughtered": current_poultry_slaughter,
+                "Poultry Pop": current_total_poultry/poultry_visual_optimiser,
+                "Poultry Born": new_poultry_pm/poultry_visual_optimiser,
+                "Poultry Slaughtered": current_poultry_slaughter/poultry_visual_optimiser,
                 "Poultry Slaughtered Hours": current_poultry_slaughter * poultry_slaughter_hours,
                 "Poultry Feed": current_total_poultry * poultry_feed_pm_per_bird,
                 "Month": i,
@@ -382,6 +412,10 @@ def update_graph(
         )
         current_total_pigs += new_pigs_pm - current_pig_slaughter - other_pig_death
 
+        current_pregnant_sows -= sow_slaughter_percent * (current_pig_slaughter + other_pig_death)
+        current_pregnant_cows -= mother_cow_slaughter_percent * (current_beef_slaughter + other_beef_death)
+
+
         if current_beef_cattle < 0:
             current_beef_cattle = 0
         if current_dairy_cattle < 0:
@@ -389,7 +423,7 @@ def update_graph(
 
     df_final = pd.DataFrame(d)
 
-    # fig1 = px.scatter(df_final, x="Month", y="Total Cattle Pop") #range_y=[0000,100000]
+    fig1 = px.line(df_final, x="Month", y=["Beef Born","Dairy Born","Pig Born","Poultry Born"]) #range_y=[0000,100000]
     fig2 = px.bar(
         df_final,
         x="Month",
@@ -408,12 +442,19 @@ def update_graph(
         y=["Beef Slaughtered Hours","Dairy Slaughtered Hours","Pig Slaughtered Hours","Poultry Slaughtered Hours"],
         title="Slaughter Worker Hours Distribution",
     )
+    fig5 = px.bar(
+        df_final,
+        x="Month",
+        y=["Beef Slaughtered","Dairy Slaughtered","Pig Slaughtered","Poultry Slaughtered"],
+        title="Slaughter Counts Distribution",
+    )
 
     return (
-        # fig1,
+        fig1,
         fig2,
         fig3,
         fig4,
+        fig5,
         "# " "Livestock Population",
         # "Modelled beef and dairy industry",
     )  # returned objects are assigned to the component property of the Output
