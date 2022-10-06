@@ -344,7 +344,8 @@ def update_graph(
     pig_feed_pm_per_pig = 141.8361586
     baseline_feed = current_total_poultry*poultry_feed_pm_per_bird +   current_total_pigs*pig_feed_pm_per_pig + current_beef_cattle*beef_cow_feed_pm_per_cow + dairy_cow_feed_pm_per_cow*current_dairy_cattle
 
-
+    print("baseline feed")
+    print(baseline_feed)
 
     d = []  # create empty list to place variables in to in loop
 
@@ -411,15 +412,16 @@ def update_graph(
         current_dairy_feed =  current_dairy_cattle * dairy_cow_feed_pm_per_cow 
         current_pig_feed = current_total_pigs * pig_feed_pm_per_pig
         current_poultry_feed = current_total_poultry * poultry_feed_pm_per_bird
-        total_current_feed = current_beef_feed + current_dairy_feed + current_pig_feed + current_poultry_feed
-        current_feed_saved = baseline_feed - total_current_feed 
+        current_feed_combined = current_beef_feed + current_dairy_feed + current_pig_feed + current_poultry_feed
+        current_feed_saved = baseline_feed - current_feed_combined 
 
         # print(baseline_feed * magnitude_adjust *feed_unit_adjust)
         print(current_poultry_feed* magnitude_adjust *feed_unit_adjust)
-        print(total_current_feed * magnitude_adjust *feed_unit_adjust)
+        print(current_feed_combined * magnitude_adjust *feed_unit_adjust)
 
         ### Generate list (before new totals have been calculated)
         # magnitude adjust moves the numbers from per thousnad head to per head (or other)
+        # feed adjust turns lbs in to tons
         d.append(
             {
                 "Beef Pop": current_beef_cattle * magnitude_adjust,
@@ -448,7 +450,8 @@ def update_graph(
                 "Poultry Slaughtered Hours": current_poultry_slaughter * poultry_slaughter_hours * magnitude_adjust,
                 "Poultry Slaughtered Hours %": current_poultry_slaughter  * poultry_slaughter_hours/ total_slaughter_cap_hours,
                 "Poultry Feed": current_total_poultry * poultry_feed_pm_per_bird * magnitude_adjust *feed_unit_adjust,
-                "Feed Saved": current_feed_saved,
+                "Combined Feed": current_feed_combined * magnitude_adjust * feed_unit_adjust,
+                "Combined Saved Feed": (baseline_feed-current_feed_combined) * magnitude_adjust * feed_unit_adjust,
                 "Month": i,
             }
         )
@@ -474,10 +477,16 @@ def update_graph(
         if current_dairy_cattle < 0:
             current_dairy_cattle = 0
 
+
+    ### End of loop, start summary
+
     df_final = pd.DataFrame(d)
-    total_feed_saved = df_final["Feed Saved"].sum() * magnitude_adjust *feed_unit_adjust # million tons
 
+    # final feed calculations
+    total_feed_saved = ((df_final["Combined Saved Feed"]).sum()) # million tons
+    baseline_total_feed = baseline_feed* magnitude_adjust * feed_unit_adjust*months
 
+    # create figures
     fig1 = px.line(df_final, x="Month", y=["Beef Born","Dairy Born","Pig Born","Poultry Born"]) #range_y=[0000,100000]
     fig2 = px.bar(
         df_final,
@@ -503,10 +512,10 @@ def update_graph(
         y=["Beef Slaughtered","Dairy Slaughtered","Pig Slaughtered","Poultry Slaughtered"],
         title="Slaughter Counts Distribution",
     )
-    fig6 = px.line(df_final, x="Month", y=["Feed Saved"])
+    fig6 = px.line(df_final, x="Month", y=["Combined Feed"])
 
 
-
+    #return figures and outputs
     return (
         fig1,
         fig2,
@@ -514,7 +523,7 @@ def update_graph(
         fig4,
         fig5,
         fig6,
-        f"# Total Feed Use Reduction, {total_feed_saved.round()} million tons" 
+        f"# Total Feed Use Reduction over {months} months is {total_feed_saved.round()} tons from a baseline of {baseline_total_feed.round()} tons" 
         # "Modelled beef and dairy industry",
     )  # returned objects are assigned to the component property of the Output
 
