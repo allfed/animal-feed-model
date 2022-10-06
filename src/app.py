@@ -332,12 +332,13 @@ def update_graph(
 
 
 
-    ### FEED
+    ### FEED #commented out code is bottom up from roam page
     # beef_cow_feed_pm_per_cow = 880 # lbs
     # dairy_cow_feed_pm_per_cow = 1048
     # poultry_feed_pm_per_bird = 20
     # pig_feed_pm_per_pig = 139
 
+    # these feed numbers are top down, calculations in google sheet, working backwards from total feed used and dividing it evenly amongst the animal populations
     beef_cow_feed_pm_per_cow = 137.3117552 # lbs
     dairy_cow_feed_pm_per_cow = 448.3820431
     poultry_feed_pm_per_bird = 4.763762808
