@@ -103,7 +103,7 @@ controls = dbc.Card(
 
         html.Div(
             [
-                dbc.Label("Pig Breeding"),
+                dbc.Label("Reduction Pig Breeding"),
                 dcc.Slider(
                     0,
                     100,
@@ -116,7 +116,7 @@ controls = dbc.Card(
         ),
         html.Div(
             [
-                dbc.Label("Poultry Breeding"),
+                dbc.Label("Reduction Poultry Breeding"),
                 dcc.Slider(
                     0,
                     100,
