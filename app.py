@@ -11,7 +11,7 @@ Start main function
 """
 # Create dataframes
 PATH = pathlib.Path(__file__).parent
-DATA_PATH = PATH.joinpath("../data").resolve()
+DATA_PATH = PATH.joinpath("/data").resolve()
 df = pd.read_csv(DATA_PATH.joinpath("NassCattle2022.csv"), index_col="Variable")
 df2 = pd.read_csv(DATA_PATH.joinpath("NassPigs2022.csv"), index_col="Variable")
 df["Qty"] = df["Qty"].astype("float")
