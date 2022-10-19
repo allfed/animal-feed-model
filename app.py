@@ -50,7 +50,9 @@ controls = dbc.Card(
         ),
         html.Div(
             [
-                dbc.Label("Proportion of Slaughter which is mothers"), # (proxy for termination of pregnancies too, but not the same as a percentage)
+                dbc.Label(
+                    "Proportion of Slaughter which is mothers"
+                ),  # (proxy for termination of pregnancies too, but not the same as a percentage)
                 dcc.Slider(
                     0,
                     100,
@@ -60,10 +62,12 @@ controls = dbc.Card(
                     tooltip={"placement": "bottom", "always_visible": True},
                 ),
             ]
-        ),        
+        ),
         html.Div(
             [
-                dbc.Label("Discount Rate for Labour/Technology Transfer between species"),
+                dbc.Label(
+                    "Discount Rate for Labour/Technology Transfer between species"
+                ),
                 dcc.Slider(
                     0,
                     100,
@@ -100,7 +104,6 @@ controls = dbc.Card(
                 ),
             ]
         ),
-
         html.Div(
             [
                 dbc.Label("Reduction Pig Breeding"),
@@ -197,12 +200,12 @@ def update_graph(
     reduction_in_poultry_breeding,
     months,
     discount_rate,
-    mother_slaughter
+    mother_slaughter,
 ):  # function arguments come from the component property of the Input (in this case, the sliders)
 
     poultry_visual_optimiser = 1
     magnitude_adjust = 1000
-    feed_unit_adjust = 0.0005 #convert pounds to tons 
+    feed_unit_adjust = 0.0005  # convert pounds to tons
     ## unpack all the dataframe information for ease of use ##
     # pigs
     total_pigs = df2.loc["TotalPigs", "Qty"]
@@ -212,11 +215,12 @@ def update_graph(
     piglets_per_litter = 7.5
 
     # poultry
-    total_poultry = 2127170289 / 1000  # USDA everything is in 1000 head, so divide this number by 1000
+    total_poultry = (
+        2127170289 / 1000
+    )  # USDA everything is in 1000 head, so divide this number by 1000
     poultry_slaughter_pm = 853670.0  # USDA
     chicks_pm = poultry_slaughter_pm  # assume the same, no data
     poultryGestation = 1  # actaully 21 days, let's round to 1 month
-
 
     # cows (more complex, as need to split dairy and beef)
     total_calves = df.loc["Calves under 500 pounds", "Qty"]
@@ -230,9 +234,6 @@ def update_graph(
     cow_slaughter_pm = df.loc["CowSlaughter", "Qty"]
     cowGestation = df.loc["cowGestation", "Qty"]
     calves_per_mother = 1
-
-
-
 
     #### Calcultaion for cows ratios
     # calaculate number of cows using ratios
@@ -269,23 +270,19 @@ def update_graph(
     increase_in_slaughter *= 0.01
 
     # per month values
-    other_cow_death_rate = 0.005    # from USDA
-    other_pig_death_rate = 0.005    # from USDA
+    other_cow_death_rate = 0.005  # from USDA
+    other_pig_death_rate = 0.005  # from USDA
     other_poultry_death_rate = 0.005
-    new_beef_calfs_pm = (new_beef_calfs / 12) 
-    new_dairy_calfs_pm = (new_dairy_calfs / 12) 
+    new_beef_calfs_pm = new_beef_calfs / 12
+    new_dairy_calfs_pm = new_dairy_calfs / 12
     new_pigs_pm = piglets_pm
     new_poultry_pm = chicks_pm
 
-
-
-
     # pregnant animals
-    current_pregnant_sows = piglets_pm/piglets_per_litter
-    current_pregnant_cows = new_beef_calfs_pm/calves_per_mother
-    sow_slaughter_percent = mother_slaughter # of total percent of pig slaughter
-    mother_cow_slaughter_percent = mother_slaughter # of total percent of cow slaughter
-
+    current_pregnant_sows = piglets_pm / piglets_per_litter
+    current_pregnant_cows = new_beef_calfs_pm / calves_per_mother
+    sow_slaughter_percent = mother_slaughter  # of total percent of pig slaughter
+    mother_cow_slaughter_percent = mother_slaughter  # of total percent of cow slaughter
 
     #### Slaughtering ####
     ### Slaughtering variables (currently hardcoded !!)
@@ -304,12 +301,8 @@ def update_graph(
         + pigs_slaughter_pm * pig_slaughter_hours
         + poultry_slaughter_pm * poultry_slaughter_hours
     )
-    skill_transfer_discount_chickens_to_pigs = (
-        (100-discount_rate)/100  # 
-    )
-    skill_transfer_discount_pigs_to_cows = (
-        (100-discount_rate)/100  # 
-    )
+    skill_transfer_discount_chickens_to_pigs = (100 - discount_rate) / 100  #
+    skill_transfer_discount_pigs_to_cows = (100 - discount_rate) / 100  #
 
     ## Slaughtering Updates, increases from slider
     total_slaughter_cap_hours *= increase_in_slaughter  # measured in hours
@@ -322,15 +315,12 @@ def update_graph(
     )  # measured in head
     spare_slaughter_hours = 0
 
-
     ## define current totals
     # current_beef_feed_cattle = cattle_on_feed
     current_beef_cattle = cattle_in_beef_track
     current_dairy_cattle = cattle_in_dairy_track
     current_total_pigs = total_pigs
     current_total_poultry = total_poultry
-
-
 
     ### FEED #commented out code is bottom up from roam page
     # beef_cow_feed_pm_per_cow = 880 # lbs
@@ -339,11 +329,16 @@ def update_graph(
     # pig_feed_pm_per_pig = 139
 
     # these feed numbers are top down, calculations in google sheet, working backwards from total feed used and dividing it evenly amongst the animal populations
-    beef_cow_feed_pm_per_cow = 137.3117552 # lbs
+    beef_cow_feed_pm_per_cow = 137.3117552  # lbs
     dairy_cow_feed_pm_per_cow = 448.3820431
     poultry_feed_pm_per_bird = 4.763762808
     pig_feed_pm_per_pig = 141.8361586
-    baseline_feed = current_total_poultry*poultry_feed_pm_per_bird +   current_total_pigs*pig_feed_pm_per_pig + current_beef_cattle*beef_cow_feed_pm_per_cow + dairy_cow_feed_pm_per_cow*current_dairy_cattle
+    baseline_feed = (
+        current_total_poultry * poultry_feed_pm_per_bird
+        + current_total_pigs * pig_feed_pm_per_pig
+        + current_beef_cattle * beef_cow_feed_pm_per_cow
+        + dairy_cow_feed_pm_per_cow * current_dairy_cattle
+    )
 
     print("baseline feed")
     print(baseline_feed)
@@ -352,11 +347,13 @@ def update_graph(
 
     # simulate x months
     for i in range(months):
-        
-        new_pigs_pm = current_pregnant_sows*piglets_per_litter
-        new_beef_calfs_pm = current_pregnant_cows*calves_per_mother
-        
-        print(f"Current sows pregnant is, {current_pregnant_sows}. And cows is {current_pregnant_cows}.")
+
+        new_pigs_pm = current_pregnant_sows * piglets_per_litter
+        new_beef_calfs_pm = current_pregnant_cows * calves_per_mother
+
+        print(
+            f"Current sows pregnant is, {current_pregnant_sows}. And cows is {current_pregnant_cows}."
+        )
 
         # determine birth rates
         if np.abs(i - cowGestation) <= 0.5:
@@ -367,7 +364,6 @@ def update_graph(
         if np.abs(i - pigGestation) <= 0.5:
             new_pigs_pm *= 1 - reduction_in_pig_breeding
             current_pregnant_sows *= 1 - reduction_in_pig_breeding
-
 
         if np.abs(i - poultryGestation) <= 0.5:
             new_poultry_pm *= 1 - reduction_in_poultry_breeding
@@ -384,24 +380,29 @@ def update_graph(
                 current_poultry_slaughter - current_total_poultry
             ) * poultry_slaughter_hours
             current_poultry_slaughter = current_total_poultry
-            current_pig_slaughter += spare_slaughter_hours * skill_transfer_discount_chickens_to_pigs / pig_slaughter_hours
+            current_pig_slaughter += (
+                spare_slaughter_hours
+                * skill_transfer_discount_chickens_to_pigs
+                / pig_slaughter_hours
+            )
         if current_total_pigs < current_pig_slaughter:
             spare_slaughter_hours = (
                 current_pig_slaughter - current_total_pigs
             ) * pig_slaughter_hours
             current_pig_slaughter = current_total_pigs
-            current_cow_slaughter += spare_slaughter_hours * skill_transfer_discount_pigs_to_cows / cow_slaughter_hours
+            current_cow_slaughter += (
+                spare_slaughter_hours
+                * skill_transfer_discount_pigs_to_cows
+                / cow_slaughter_hours
+            )
 
         # this set up only kills dairy cows when they are getting to the end of their life.
         current_dairy_slaughter = current_dairy_cattle / (dairy_life_expectancy * 12)
         current_beef_slaughter = current_cow_slaughter - current_dairy_slaughter
         if current_beef_cattle < current_beef_slaughter:
-            actual_beef_slaughter = current_beef_cattle #required due to the difference between actual slaughter and 'slaughter capacity' consider a rewrite of the whole method to distinuguish between these two. For now, this is thr workaround.
-        else: 
+            actual_beef_slaughter = current_beef_cattle  # required due to the difference between actual slaughter and 'slaughter capacity' consider a rewrite of the whole method to distinuguish between these two. For now, this is thr workaround.
+        else:
             actual_beef_slaughter = current_beef_slaughter
-
-
-
 
         other_beef_death = other_cow_death_rate * current_beef_cattle
         other_dairy_death = other_cow_death_rate * current_dairy_cattle
@@ -409,16 +410,21 @@ def update_graph(
         other_poultry_death = current_total_poultry * other_poultry_death_rate
 
         ## Feed
-        current_beef_feed = current_beef_cattle * beef_cow_feed_pm_per_cow 
-        current_dairy_feed =  current_dairy_cattle * dairy_cow_feed_pm_per_cow 
+        current_beef_feed = current_beef_cattle * beef_cow_feed_pm_per_cow
+        current_dairy_feed = current_dairy_cattle * dairy_cow_feed_pm_per_cow
         current_pig_feed = current_total_pigs * pig_feed_pm_per_pig
         current_poultry_feed = current_total_poultry * poultry_feed_pm_per_bird
-        current_feed_combined = current_beef_feed + current_dairy_feed + current_pig_feed + current_poultry_feed
-        current_feed_saved = baseline_feed - current_feed_combined 
+        current_feed_combined = (
+            current_beef_feed
+            + current_dairy_feed
+            + current_pig_feed
+            + current_poultry_feed
+        )
+        current_feed_saved = baseline_feed - current_feed_combined
 
         # print(baseline_feed * magnitude_adjust *feed_unit_adjust)
-        print(current_poultry_feed* magnitude_adjust *feed_unit_adjust)
-        print(current_feed_combined * magnitude_adjust *feed_unit_adjust)
+        print(current_poultry_feed * magnitude_adjust * feed_unit_adjust)
+        print(current_feed_combined * magnitude_adjust * feed_unit_adjust)
 
         ### Generate list (before new totals have been calculated)
         # magnitude adjust moves the numbers from per thousnad head to per head (or other)
@@ -428,31 +434,69 @@ def update_graph(
                 "Beef Pop": current_beef_cattle * magnitude_adjust,
                 "Beef Born": new_beef_calfs_pm * magnitude_adjust,
                 "Beef Slaughtered": actual_beef_slaughter * magnitude_adjust,
-                "Beef Slaughtered Hours": actual_beef_slaughter*cow_slaughter_hours * magnitude_adjust,
-                "Beef Slaughtered Hours %": actual_beef_slaughter *cow_slaughter_hours/total_slaughter_cap_hours,
+                "Beef Slaughtered Hours": actual_beef_slaughter
+                * cow_slaughter_hours
+                * magnitude_adjust,
+                "Beef Slaughtered Hours %": actual_beef_slaughter
+                * cow_slaughter_hours
+                / total_slaughter_cap_hours,
                 "Beef Other Death": other_beef_death * magnitude_adjust,
-                "Beef Feed": current_beef_cattle * beef_cow_feed_pm_per_cow * magnitude_adjust *feed_unit_adjust,
+                "Beef Feed": current_beef_cattle
+                * beef_cow_feed_pm_per_cow
+                * magnitude_adjust
+                * feed_unit_adjust,
                 "Dairy Pop": current_dairy_cattle * magnitude_adjust,
                 "Dairy Born": new_dairy_calfs_pm * magnitude_adjust,
                 "Dairy Slaughtered": current_dairy_slaughter * magnitude_adjust,
-                "Dairy Slaughtered Hours": current_dairy_slaughter*cow_slaughter_hours * magnitude_adjust,
-                "Dairy Slaughtered Hours %": current_dairy_slaughter*cow_slaughter_hours /total_slaughter_cap_hours,
+                "Dairy Slaughtered Hours": current_dairy_slaughter
+                * cow_slaughter_hours
+                * magnitude_adjust,
+                "Dairy Slaughtered Hours %": current_dairy_slaughter
+                * cow_slaughter_hours
+                / total_slaughter_cap_hours,
                 "Dairy Other Death": other_dairy_death * magnitude_adjust,
-                "Dairy Feed": current_dairy_cattle * dairy_cow_feed_pm_per_cow * magnitude_adjust *feed_unit_adjust,
+                "Dairy Feed": current_dairy_cattle
+                * dairy_cow_feed_pm_per_cow
+                * magnitude_adjust
+                * feed_unit_adjust,
                 "Pigs Pop": current_total_pigs * magnitude_adjust,
                 "Pig Born": new_pigs_pm * magnitude_adjust,
                 "Pig Slaughtered": current_pig_slaughter * magnitude_adjust,
-                "Pig Slaughtered Hours": current_pig_slaughter * pig_slaughter_hours * magnitude_adjust,
-                "Pig Slaughtered Hours %": current_pig_slaughter * pig_slaughter_hours /total_slaughter_cap_hours,
-                "Pigs Feed": current_total_pigs * pig_feed_pm_per_pig * magnitude_adjust *feed_unit_adjust,
-                "Poultry Pop": current_total_poultry/poultry_visual_optimiser * magnitude_adjust,
-                "Poultry Born": new_poultry_pm/poultry_visual_optimiser * magnitude_adjust,
-                "Poultry Slaughtered": current_poultry_slaughter/poultry_visual_optimiser * magnitude_adjust,
-                "Poultry Slaughtered Hours": current_poultry_slaughter * poultry_slaughter_hours * magnitude_adjust,
-                "Poultry Slaughtered Hours %": current_poultry_slaughter  * poultry_slaughter_hours/ total_slaughter_cap_hours,
-                "Poultry Feed": current_total_poultry * poultry_feed_pm_per_bird * magnitude_adjust *feed_unit_adjust,
-                "Combined Feed": current_feed_combined * magnitude_adjust * feed_unit_adjust,
-                "Combined Saved Feed": (baseline_feed-current_feed_combined) * magnitude_adjust * feed_unit_adjust,
+                "Pig Slaughtered Hours": current_pig_slaughter
+                * pig_slaughter_hours
+                * magnitude_adjust,
+                "Pig Slaughtered Hours %": current_pig_slaughter
+                * pig_slaughter_hours
+                / total_slaughter_cap_hours,
+                "Pigs Feed": current_total_pigs
+                * pig_feed_pm_per_pig
+                * magnitude_adjust
+                * feed_unit_adjust,
+                "Poultry Pop": current_total_poultry
+                / poultry_visual_optimiser
+                * magnitude_adjust,
+                "Poultry Born": new_poultry_pm
+                / poultry_visual_optimiser
+                * magnitude_adjust,
+                "Poultry Slaughtered": current_poultry_slaughter
+                / poultry_visual_optimiser
+                * magnitude_adjust,
+                "Poultry Slaughtered Hours": current_poultry_slaughter
+                * poultry_slaughter_hours
+                * magnitude_adjust,
+                "Poultry Slaughtered Hours %": current_poultry_slaughter
+                * poultry_slaughter_hours
+                / total_slaughter_cap_hours,
+                "Poultry Feed": current_total_poultry
+                * poultry_feed_pm_per_bird
+                * magnitude_adjust
+                * feed_unit_adjust,
+                "Combined Feed": current_feed_combined
+                * magnitude_adjust
+                * feed_unit_adjust,
+                "Combined Saved Feed": (baseline_feed - current_feed_combined)
+                * magnitude_adjust
+                * feed_unit_adjust,
                 "Month": i,
             }
         )
@@ -469,26 +513,30 @@ def update_graph(
         )
         current_total_pigs += new_pigs_pm - current_pig_slaughter - other_pig_death
 
-        current_pregnant_sows -= sow_slaughter_percent * (current_pig_slaughter + other_pig_death)
-        current_pregnant_cows -= mother_cow_slaughter_percent * (current_beef_slaughter + other_beef_death)
-
+        current_pregnant_sows -= sow_slaughter_percent * (
+            current_pig_slaughter + other_pig_death
+        )
+        current_pregnant_cows -= mother_cow_slaughter_percent * (
+            current_beef_slaughter + other_beef_death
+        )
 
         if current_beef_cattle < 0:
             current_beef_cattle = 0
         if current_dairy_cattle < 0:
             current_dairy_cattle = 0
 
-
     ### End of loop, start summary
 
     df_final = pd.DataFrame(d)
 
     # final feed calculations
-    total_feed_saved = ((df_final["Combined Saved Feed"]).sum()) # million tons
-    baseline_total_feed = baseline_feed* magnitude_adjust * feed_unit_adjust*months
+    total_feed_saved = (df_final["Combined Saved Feed"]).sum()  # million tons
+    baseline_total_feed = baseline_feed * magnitude_adjust * feed_unit_adjust * months
 
     # create figures
-    fig1 = px.line(df_final, x="Month", y=["Beef Born","Dairy Born","Pig Born","Poultry Born"]) #range_y=[0000,100000]
+    fig1 = px.line(
+        df_final, x="Month", y=["Beef Born", "Dairy Born", "Pig Born", "Poultry Born"]
+    )  # range_y=[0000,100000]
     fig2 = px.bar(
         df_final,
         x="Month",
@@ -504,19 +552,28 @@ def update_graph(
     fig4 = px.bar(
         df_final,
         x="Month",
-        y=["Beef Slaughtered Hours %","Dairy Slaughtered Hours %","Pig Slaughtered Hours %","Poultry Slaughtered Hours %"],
+        y=[
+            "Beef Slaughtered Hours %",
+            "Dairy Slaughtered Hours %",
+            "Pig Slaughtered Hours %",
+            "Poultry Slaughtered Hours %",
+        ],
         title="Slaughter Worker Hours Distribution Percentage",
     )
     fig5 = px.bar(
         df_final,
         x="Month",
-        y=["Beef Slaughtered","Dairy Slaughtered","Pig Slaughtered","Poultry Slaughtered"],
+        y=[
+            "Beef Slaughtered",
+            "Dairy Slaughtered",
+            "Pig Slaughtered",
+            "Poultry Slaughtered",
+        ],
         title="Slaughter Counts Distribution",
     )
     fig6 = px.line(df_final, x="Month", y=["Combined Feed"])
 
-
-    #return figures and outputs
+    # return figures and outputs
     return (
         fig1,
         fig2,
@@ -524,9 +581,10 @@ def update_graph(
         fig4,
         fig5,
         fig6,
-        f"# Total Feed Use Reduction over {months} months is {(total_feed_saved/1000000).round() } Mtons from a baseline of {(baseline_total_feed/1000000).round()} Mtons" 
+        f"# Total Feed Use Reduction over {months} months is {(total_feed_saved/1000000).round() } Mtons from a baseline of {(baseline_total_feed/1000000).round()} Mtons"
         # "Modelled beef and dairy industry",
     )  # returned objects are assigned to the component property of the Output
+
 
 # Run app
 if __name__ == "__main__":
