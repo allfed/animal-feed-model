@@ -340,9 +340,6 @@ def update_graph(
         + dairy_cow_feed_pm_per_cow * current_dairy_cattle
     )
 
-    print("baseline feed")
-    print(baseline_feed)
-
     d = []  # create empty list to place variables in to in loop
 
     # simulate x months
@@ -350,10 +347,6 @@ def update_graph(
 
         new_pigs_pm = current_pregnant_sows * piglets_per_litter
         new_beef_calfs_pm = current_pregnant_cows * calves_per_mother
-
-        print(
-            f"Current sows pregnant is, {current_pregnant_sows}. And cows is {current_pregnant_cows}."
-        )
 
         # determine birth rates
         if np.abs(i - cowGestation) <= 0.5:
@@ -422,9 +415,6 @@ def update_graph(
         )
         current_feed_saved = baseline_feed - current_feed_combined
 
-        # print(baseline_feed * magnitude_adjust *feed_unit_adjust)
-        print(current_poultry_feed * magnitude_adjust * feed_unit_adjust)
-        print(current_feed_combined * magnitude_adjust * feed_unit_adjust)
 
         ### Generate list (before new totals have been calculated)
         # magnitude adjust moves the numbers from per thousnad head to per head (or other)
