@@ -228,9 +228,7 @@ def update_graph(
     beef_cows = df.loc["Beef cows", "Qty"]
     beef_steers = df.loc["Steers 500 pounds and over", "Qty"]
     heifers = df.loc["Heifers 500 pounds and over", "Qty"]
-    bulls = df.loc["Bulls 500 pounds and over", "Qty"]
     new_calves_per_year = df.loc["Calf crop", "Qty"]
-    cattle_on_feed = df.loc["Cattle on feed", "Qty"]
     cow_slaughter_pm = df.loc["CowSlaughter", "Qty"]
     cowGestation = df.loc["cowGestation", "Qty"]
     calves_per_mother = 1
