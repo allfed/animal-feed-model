@@ -9,11 +9,6 @@ copyright: ALLFED
 
 #This specifies the autogeneration portion
 pages:
-  - page: "modules/src/hunting.md"
-    source: "src/hunting.py"
-    functions:
-      - update_graph
-
   - page: "modules/src/app.md"
     source: "src/app.py"
     functions:
