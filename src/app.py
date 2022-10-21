@@ -12,9 +12,9 @@ Start main function
 # Create dataframes
 PATH = pathlib.Path(__file__).parent
 DATA_PATH = PATH.joinpath("../data").resolve()
-df = pd.read_csv(DATA_PATH.joinpath("NassCattle2022.csv"), index_col="Variable")
-df2 = pd.read_csv(DATA_PATH.joinpath("NassPigs2022.csv"), index_col="Variable")
-df["Qty"] = df["Qty"].astype("float")
+df_cattle = pd.read_csv(DATA_PATH.joinpath("NassCattle2022.csv"), index_col="Variable")
+df_pigs = pd.read_csv(DATA_PATH.joinpath("NassPigs2022.csv"), index_col="Variable")
+df_cattle["Qty"] = df_cattle["Qty"].astype("float")
 
 #### Do Dash things below, skip ahead to callback function for the main event
 # Build your components
@@ -203,15 +203,17 @@ def update_graph(
     mother_slaughter,
 ):  # function arguments come from the component property of the Input (in this case, the sliders)
 
+
+    graph_colours = [ '#3D87CB', '#F0B323', '#DC582A', '#674230','#3A913F', '#75787B']
     poultry_visual_optimiser = 1
     magnitude_adjust = 1000
-    feed_unit_adjust = 0.0005  # convert pounds to tons
+    feed_unit_adjust = 0.000453592  # convert pounds to metric tons
     ## unpack all the dataframe information for ease of use ##
     # pigs
-    total_pigs = df2.loc["TotalPigs", "Qty"]
-    piglets_pm = df2.loc["PigletsPerMonth", "Qty"]
-    pigs_slaughter_pm = df2.loc["SlaughterPerMonth", "Qty"]
-    pigGestation = df2.loc["pigGestation", "Qty"]
+    total_pigs = df_pigs.loc["TotalPigs", "Qty"]
+    piglets_pm = df_pigs.loc["PigletsPerMonth", "Qty"]
+    pigs_slaughter_pm = df_pigs.loc["SlaughterPerMonth", "Qty"]
+    pigGestation = df_pigs.loc["pigGestation", "Qty"]
     piglets_per_litter = 7.5
 
     # poultry
@@ -223,35 +225,36 @@ def update_graph(
     poultryGestation = 1  # actaully 21 days, let's round to 1 month
 
     # cows (more complex, as need to split dairy and beef)
-    total_calves = df.loc["Calves under 500 pounds", "Qty"]
-    dairy_cows = df.loc["Milk cows", "Qty"]
-    beef_cows = df.loc["Beef cows", "Qty"]
-    beef_steers = df.loc["Steers 500 pounds and over", "Qty"]
-    heifers = df.loc["Heifers 500 pounds and over", "Qty"]
-    new_calves_per_year = df.loc["Calf crop", "Qty"]
-    cow_slaughter_pm = df.loc["CowSlaughter", "Qty"]
-    cowGestation = df.loc["cowGestation", "Qty"]
+    total_calves = df_cattle.loc["Calves under 500 pounds", "Qty"]
+    dairy_cows = df_cattle.loc["Milk cows", "Qty"]
+    beef_cows = df_cattle.loc["Beef cows", "Qty"]
+    beef_steers = df_cattle.loc["Steers 500 pounds and over", "Qty"]
+    heifers = df_cattle.loc["Heifers 500 pounds and over", "Qty"]
+    new_calves_per_year = df_cattle.loc["Calf crop", "Qty"]
+    cow_slaughter_pm = df_cattle.loc["CowSlaughter", "Qty"]
+    cowGestation = df_cattle.loc["cowGestation", "Qty"]
     calves_per_mother = 1
 
     #### Calcultaion for cows ratios
     # calaculate number of cows using ratios
-    dairy_beef_mother_ratio = dairy_cows / beef_cows
-    dairy_heifers = heifers * dairy_beef_mother_ratio
+    dairy_mother_percent = dairy_cows / (beef_cows+dairy_cows)
+
+    dairy_heifers = heifers * dairy_mother_percent
     beef_heifers = heifers - dairy_heifers
 
-    dairy_calves = dairy_beef_mother_ratio * total_calves
+    dairy_calves = dairy_mother_percent * total_calves
     beef_calves = total_calves - dairy_calves
-    dairy_calf_steers = dairy_calves / 2
+    dairy_calf_boys = dairy_calves / 2
     dairy_calf_girls = dairy_calves / 2
 
-    calves_destined_for_beef_ratio = (beef_calves + dairy_calf_steers) / total_calves
+    calves_destined_for_beef_ratio = (beef_calves + dairy_calf_boys) / total_calves
     new_beef_calfs = calves_destined_for_beef_ratio * new_calves_per_year
     new_dairy_calfs = new_calves_per_year - new_beef_calfs
     new_beef_calfs_pm = new_beef_calfs / 12
     new_dairy_calfs_pm = new_dairy_calfs / 12
 
     cattle_in_beef_track = (
-        dairy_calf_steers + beef_calves + beef_steers + beef_cows + beef_heifers
+        dairy_calf_boys + beef_calves + beef_steers + beef_cows + beef_heifers
     )
     cattle_in_dairy_track = dairy_calf_girls + dairy_cows + dairy_heifers
 
@@ -523,20 +526,23 @@ def update_graph(
 
     # create figures
     fig1 = px.line(
-        df_final, x="Month", y=["Beef Born", "Dairy Born", "Pig Born", "Poultry Born"]
-    )  # range_y=[0000,100000]
+        df_final, x="Month", y=["Beef Born", "Dairy Born", "Pig Born", "Poultry Born"],
+        color_discrete_sequence=graph_colours
+    ).update_layout( yaxis_title="Head")
     fig2 = px.bar(
         df_final,
         x="Month",
         y=["Beef Pop", "Dairy Pop", "Pigs Pop", "Poultry Pop"],
         title="Population Make-up",
-    )
+        color_discrete_sequence=graph_colours
+    ).update_layout( yaxis_title="Head")
     fig3 = px.bar(
         df_final,
         x="Month",
         y=["Beef Feed", "Dairy Feed", "Pigs Feed", "Poultry Feed"],
-        title="Feed Requirements (Dry Matter Equivalent)",
-    )
+        title="Feed Requirements",
+        color_discrete_sequence=graph_colours
+    ).update_layout( yaxis_title="Metric Tonnes")
     fig4 = px.bar(
         df_final,
         x="Month",
@@ -546,8 +552,9 @@ def update_graph(
             "Pig Slaughtered Hours %",
             "Poultry Slaughtered Hours %",
         ],
-        title="Slaughter Worker Hours Distribution Percentage",
-    )
+        title="Slaughter Worker Hours Fractional Distribution",
+        color_discrete_sequence=graph_colours
+    ).update_layout( yaxis_title="Fraction Hours")
     fig5 = px.bar(
         df_final,
         x="Month",
@@ -558,7 +565,8 @@ def update_graph(
             "Poultry Slaughtered",
         ],
         title="Slaughter Counts Distribution",
-    )
+        color_discrete_sequence=graph_colours
+    ).update_layout( yaxis_title="Head")
     fig6 = px.line(df_final, x="Month", y=["Combined Feed"])
 
     # return figures and outputs
