@@ -289,10 +289,10 @@ def update_graph(
     ### Slaughtering variables (currently hardcoded !!)
     # total slaughter capacity
     cow_slaughter_hours = (
-        4  # resources/hours of single person hours for slaughter of cow
+        6  # resources/hours of single person hours for slaughter of cow
     )
     pig_slaughter_hours = (
-        4  # resources/hours of single person hours for slaughter of pig
+        3  # resources/hours of single person hours for slaughter of pig
     )
     poultry_slaughter_hours = (
         0.08  # resources/hours of single person hours for slaughter of poultry

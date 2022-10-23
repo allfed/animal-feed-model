@@ -9,6 +9,7 @@ dependencies:
   - ipykernel 
   - ipywidgets
   - dash
+  - matplotlib
   - pip
   - pip:
     - plotly
