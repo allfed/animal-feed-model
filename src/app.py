@@ -203,8 +203,7 @@ def update_graph(
     mother_slaughter,
 ):  # function arguments come from the component property of the Input (in this case, the sliders)
 
-
-    graph_colours = [ '#3D87CB', '#F0B323', '#DC582A', '#674230','#3A913F', '#75787B']
+    graph_colours = ["#3D87CB", "#F0B323", "#DC582A", "#674230", "#3A913F", "#75787B"]
     poultry_visual_optimiser = 1
     magnitude_adjust = 1000
     feed_unit_adjust = 0.000453592  # convert pounds to metric tons
@@ -237,7 +236,7 @@ def update_graph(
 
     #### Calcultaion for cows ratios
     # calaculate number of cows using ratios
-    dairy_mother_percent = dairy_cows / (beef_cows+dairy_cows)
+    dairy_mother_percent = dairy_cows / (beef_cows + dairy_cows)
 
     dairy_heifers = heifers * dairy_mother_percent
     beef_heifers = heifers - dairy_heifers
@@ -416,7 +415,6 @@ def update_graph(
         )
         current_feed_saved = baseline_feed - current_feed_combined
 
-
         ### Generate list (before new totals have been calculated)
         # magnitude adjust moves the numbers from per thousnad head to per head (or other)
         # feed adjust turns lbs in to tons
@@ -526,23 +524,25 @@ def update_graph(
 
     # create figures
     fig1 = px.line(
-        df_final, x="Month", y=["Beef Born", "Dairy Born", "Pig Born", "Poultry Born"],
-        color_discrete_sequence=graph_colours
-    ).update_layout( yaxis_title="Head")
+        df_final,
+        x="Month",
+        y=["Beef Born", "Dairy Born", "Pig Born", "Poultry Born"],
+        color_discrete_sequence=graph_colours,
+    ).update_layout(yaxis_title="Head")
     fig2 = px.bar(
         df_final,
         x="Month",
         y=["Beef Pop", "Dairy Pop", "Pigs Pop", "Poultry Pop"],
         title="Population Make-up",
-        color_discrete_sequence=graph_colours
-    ).update_layout( yaxis_title="Head")
+        color_discrete_sequence=graph_colours,
+    ).update_layout(yaxis_title="Head")
     fig3 = px.bar(
         df_final,
         x="Month",
         y=["Beef Feed", "Dairy Feed", "Pigs Feed", "Poultry Feed"],
         title="Feed Requirements",
-        color_discrete_sequence=graph_colours
-    ).update_layout( yaxis_title="Metric Tonnes")
+        color_discrete_sequence=graph_colours,
+    ).update_layout(yaxis_title="Metric Tonnes")
     fig4 = px.bar(
         df_final,
         x="Month",
@@ -553,8 +553,8 @@ def update_graph(
             "Poultry Slaughtered Hours %",
         ],
         title="Slaughter Worker Hours Fractional Distribution",
-        color_discrete_sequence=graph_colours
-    ).update_layout( yaxis_title="Fraction Hours")
+        color_discrete_sequence=graph_colours,
+    ).update_layout(yaxis_title="Fraction Hours")
     fig5 = px.bar(
         df_final,
         x="Month",
@@ -565,8 +565,8 @@ def update_graph(
             "Poultry Slaughtered",
         ],
         title="Slaughter Counts Distribution",
-        color_discrete_sequence=graph_colours
-    ).update_layout( yaxis_title="Head")
+        color_discrete_sequence=graph_colours,
+    ).update_layout(yaxis_title="Head")
     fig6 = px.line(df_final, x="Month", y=["Combined Feed"])
 
     # return figures and outputs
