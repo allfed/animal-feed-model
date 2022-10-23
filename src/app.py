@@ -5,6 +5,7 @@ from difflib import diff_bytes
 import numpy as np
 from dash import Dash, dcc, html, Output, Input, dash_table  # pip install dash
 import dash_bootstrap_components as dbc  # pip install dash-bootstrap-components
+import matplotlib.pyplot as plt
 
 """
 Start main function
@@ -16,160 +17,169 @@ df_cattle = pd.read_csv(DATA_PATH.joinpath("NassCattle2022.csv"), index_col="Var
 df_pigs = pd.read_csv(DATA_PATH.joinpath("NassPigs2022.csv"), index_col="Variable")
 df_cattle["Qty"] = df_cattle["Qty"].astype("float")
 
-#### Do Dash things below, skip ahead to callback function for the main event
-# Build your components
-app = Dash(__name__, external_stylesheets=[dbc.themes.LUX])
 
-# Declare server for Heroku deployment. Needed for Procfile.
-server = app.server  # for heroku deployment
-
-mytitle = dcc.Markdown(children="")
-# mysubtitle = dcc.Markdown(children="")
-scatter = dcc.Graph(figure={})
-scatter2 = dcc.Graph(figure={})
-bar = dcc.Graph(figure={})
-bar2 = dcc.Graph(figure={})
-bar3 = dcc.Graph(figure={})
-bar4 = dcc.Graph(figure={})
-
-### Create slider components on a card
-controls = dbc.Card(
-    [
-        html.Div(
-            [
-                dbc.Label("Baseline Slaughter Rate"),
-                dcc.Slider(
-                    0,
-                    600,
-                    value=100,
-                    id="myslider3",
-                    updatemode="drag",
-                    tooltip={"placement": "bottom", "always_visible": True},
-                ),
-            ]
-        ),
-        html.Div(
-            [
-                dbc.Label(
-                    "Proportion of Slaughter which is mothers"
-                ),  # (proxy for termination of pregnancies too, but not the same as a percentage)
-                dcc.Slider(
-                    0,
-                    100,
-                    value=0,
-                    id="myslider8",
-                    updatemode="drag",
-                    tooltip={"placement": "bottom", "always_visible": True},
-                ),
-            ]
-        ),
-        html.Div(
-            [
-                dbc.Label(
-                    "Discount Rate for Labour/Technology Transfer between species"
-                ),
-                dcc.Slider(
-                    0,
-                    100,
-                    value=50,
-                    id="myslider7",
-                    updatemode="drag",
-                    tooltip={"placement": "bottom", "always_visible": True},
-                ),
-            ]
-        ),
-        html.Div(
-            [
-                dbc.Label("Decrease Beef Birth Rate"),
-                dcc.Slider(
-                    0,
-                    100,
-                    value=00,
-                    id="myslider1",
-                    updatemode="drag",
-                    tooltip={"placement": "bottom", "always_visible": True},
-                ),
-            ]
-        ),
-        html.Div(
-            [
-                dbc.Label("Decrease Dairy Birth Rate"),
-                dcc.Slider(
-                    0,
-                    100,
-                    value=0,
-                    id="myslider2",
-                    updatemode="drag",
-                    tooltip={"placement": "bottom", "always_visible": True},
-                ),
-            ]
-        ),
-        html.Div(
-            [
-                dbc.Label("Reduction Pig Breeding"),
-                dcc.Slider(
-                    0,
-                    100,
-                    value=0,
-                    id="myslider4",
-                    updatemode="drag",
-                    tooltip={"placement": "bottom", "always_visible": True},
-                ),
-            ]
-        ),
-        html.Div(
-            [
-                dbc.Label("Reduction Poultry Breeding"),
-                dcc.Slider(
-                    0,
-                    100,
-                    value=0,
-                    id="myslider5",
-                    updatemode="drag",
-                    tooltip={"placement": "bottom", "always_visible": True},
-                ),
-            ]
-        ),
-        html.Div(
-            [
-                dbc.Label("Months"),
-                dcc.Slider(
-                    0,
-                    24,
-                    value=12,
-                    step=1,
-                    id="myslider6",
-                    updatemode="drag",
-                    tooltip={"placement": "bottom", "always_visible": True},
-                ),
-            ]
-        ),
-    ],
-    body=True,
-)
+dash_display = 1
 
 
-# Customize your own Layout
-app.layout = dbc.Container(
-    [
-        dbc.Row([dbc.Col([mytitle], width=6)], justify="center"),
-        # dbc.Row([dbc.Col([mysubtitle], width=6)], justify="center"),
-        dbc.Row(
-            [
-                dbc.Col(controls, md=3),
-                dbc.Col([bar], width=9),
-            ],
-            align="center",
-        ),
-        html.Hr(),
-        dbc.Row([dbc.Col([bar2], width=12)], justify="center"),
-        dbc.Row([dbc.Col([bar3], width=12)], justify="center"),
-        dbc.Row([dbc.Col([bar4], width=12)], justify="center"),
-        dbc.Row([dbc.Col([scatter], width=12)], justify="center"),
-        dbc.Row([dbc.Col([scatter2], width=12)], justify="center"),
-    ],
-    fluid=True,
-)
+
+if dash_display==1:
+    #### Do Dash things below, skip ahead to callback function for the main event
+    # Build your components
+    app = Dash(__name__, external_stylesheets=[dbc.themes.LUX])
+
+    # Declare server for Heroku deployment. Needed for Procfile.
+    server = app.server  # for heroku deployment
+
+    mytitle = dcc.Markdown(children="")
+    # table_out = dcc.Markdown(children="")
+    # mysubtitle = dcc.Markdown(children="")
+    scatter = dcc.Graph(figure={})
+    scatter2 = dcc.Graph(figure={})
+    bar = dcc.Graph(figure={})
+    bar2 = dcc.Graph(figure={})
+    bar3 = dcc.Graph(figure={})
+    bar4 = dcc.Graph(figure={})
+
+    ### Create slider components on a card
+    controls = dbc.Card(
+        [
+            html.Div(
+                [
+                    dbc.Label("Baseline Slaughter Rate"),
+                    dcc.Slider(
+                        0,
+                        600,
+                        value=100,
+                        id="myslider3",
+                        updatemode="drag",
+                        tooltip={"placement": "bottom", "always_visible": True},
+                    ),
+                ]
+            ),
+            html.Div(
+                [
+                    dbc.Label(
+                        "Proportion of Slaughter which is mothers"
+                    ),  # (proxy for termination of pregnancies too, but not the same as a percentage)
+                    dcc.Slider(
+                        0,
+                        100,
+                        value=0,
+                        id="myslider8",
+                        updatemode="drag",
+                        tooltip={"placement": "bottom", "always_visible": True},
+                    ),
+                ]
+            ),
+            html.Div(
+                [
+                    dbc.Label(
+                        "Discount Rate for Labour/Technology Transfer between species"
+                    ),
+                    dcc.Slider(
+                        0,
+                        100,
+                        value=50,
+                        id="myslider7",
+                        updatemode="drag",
+                        tooltip={"placement": "bottom", "always_visible": True},
+                    ),
+                ]
+            ),
+            html.Div(
+                [
+                    dbc.Label("Decrease Beef Birth Rate"),
+                    dcc.Slider(
+                        0,
+                        100,
+                        value=00,
+                        id="myslider1",
+                        updatemode="drag",
+                        tooltip={"placement": "bottom", "always_visible": True},
+                    ),
+                ]
+            ),
+            html.Div(
+                [
+                    dbc.Label("Decrease Dairy Birth Rate"),
+                    dcc.Slider(
+                        0,
+                        100,
+                        value=0,
+                        id="myslider2",
+                        updatemode="drag",
+                        tooltip={"placement": "bottom", "always_visible": True},
+                    ),
+                ]
+            ),
+            html.Div(
+                [
+                    dbc.Label("Reduction Pig Breeding"),
+                    dcc.Slider(
+                        0,
+                        100,
+                        value=0,
+                        id="myslider4",
+                        updatemode="drag",
+                        tooltip={"placement": "bottom", "always_visible": True},
+                    ),
+                ]
+            ),
+            html.Div(
+                [
+                    dbc.Label("Reduction Poultry Breeding"),
+                    dcc.Slider(
+                        0,
+                        100,
+                        value=0,
+                        id="myslider5",
+                        updatemode="drag",
+                        tooltip={"placement": "bottom", "always_visible": True},
+                    ),
+                ]
+            ),
+            html.Div(
+                [
+                    dbc.Label("Months"),
+                    dcc.Slider(
+                        0,
+                        24,
+                        value=12,
+                        step=1,
+                        id="myslider6",
+                        updatemode="drag",
+                        tooltip={"placement": "bottom", "always_visible": True},
+                    ),
+                ]
+            ),
+        ],
+        body=True,
+    )
+
+
+    # Customize your own Layout
+    app.layout = dbc.Container(
+        [
+            dbc.Row([dbc.Col([mytitle], width=6)], justify="center"),
+            # dbc.Row([dbc.Col([mysubtitle], width=6)], justify="center"),
+            dbc.Row(
+                [
+                    dbc.Col(controls, md=3),
+                    dbc.Col([bar], width=9),
+                ],
+                align="center",
+            ),
+            html.Hr(),
+            dbc.Row([dbc.Col([bar2], width=12)], justify="center"),
+            dbc.Row([dbc.Col([bar3], width=12)], justify="center"),
+            dbc.Row([dbc.Col([bar4], width=12)], justify="center"),
+            dbc.Row([dbc.Col([scatter], width=12)], justify="center"),
+            dbc.Row([dbc.Col([scatter2], width=12)], justify="center"),
+            
+        ],
+        fluid=True,
+    )
+
 
 
 #### Callback function here, this is where it all happens
@@ -182,6 +192,7 @@ app.layout = dbc.Container(
     Output(bar4, "figure"),
     Output(scatter2, "figure"),
     Output(mytitle, "children"),
+    # Output(table_out, "children"),
     # Output(mysubtitle, "children"),
     Input("myslider1", "value"),
     Input("myslider2", "value"),
@@ -195,7 +206,7 @@ app.layout = dbc.Container(
 def update_graph(
     reduction_in_beef_calves,
     reduction_in_dairy_calves,
-    increase_in_slaughter,
+    change_to_baseline_slaughter,
     reduction_in_pig_breeding,
     reduction_in_poultry_breeding,
     months,
@@ -206,7 +217,7 @@ def update_graph(
     graph_colours = ["#3D87CB", "#F0B323", "#DC582A", "#674230", "#3A913F", "#75787B"]
     poultry_visual_optimiser = 1
     magnitude_adjust = 1000
-    feed_unit_adjust = 0.000453592  # convert pounds to metric tons
+    feed_unit_adjust = 0.000453592  # convert pounds to metric tonnes
     ## unpack all the dataframe information for ease of use ##
     # pigs
     total_pigs = df_pigs.loc["TotalPigs", "Qty"]
@@ -267,7 +278,7 @@ def update_graph(
     reduction_in_dairy_calves *= 0.01
     reduction_in_pig_breeding *= 0.01
     reduction_in_poultry_breeding *= 0.01
-    increase_in_slaughter *= 0.01
+    change_to_baseline_slaughter *= 0.01
 
     # per month values
     other_cow_death_rate = 0.005  # from USDA
@@ -305,13 +316,13 @@ def update_graph(
     skill_transfer_discount_pigs_to_cows = (100 - discount_rate) / 100  #
 
     ## Slaughtering Updates, increases from slider
-    total_slaughter_cap_hours *= increase_in_slaughter  # measured in hours
-    current_cow_slaughter = cow_slaughter_pm * increase_in_slaughter  # measured in head
+    total_slaughter_cap_hours *= change_to_baseline_slaughter  # measured in hours
+    current_cow_slaughter = cow_slaughter_pm * change_to_baseline_slaughter  # measured in head
     current_poultry_slaughter = (
-        poultry_slaughter_pm * increase_in_slaughter
+        poultry_slaughter_pm * change_to_baseline_slaughter
     )  # measured in head
     current_pig_slaughter = (
-        pigs_slaughter_pm * increase_in_slaughter
+        pigs_slaughter_pm * change_to_baseline_slaughter
     )  # measured in head
     spare_slaughter_hours = 0
 
@@ -577,11 +588,35 @@ def update_graph(
         fig4,
         fig5,
         fig6,
-        f"# Total Feed Use Reduction over {months} months is {(total_feed_saved/1000000).round() } Mtons from a baseline of {(baseline_total_feed/1000000).round()} Mtons"
+        f"# Total Feed Use Reduction over {months} months is {(total_feed_saved/1000000).round() } Mtons from a baseline of {(baseline_total_feed/1000000).round()} Mtons",
+        # df_final
         # "Modelled beef and dairy industry",
     )  # returned objects are assigned to the component property of the Output
 
 
+
+
+
+
+# [fig,fig,fig,fig,fig,fig,string,df_results] = update_graph(
+#     reduction_in_beef_calves=100,
+#     reduction_in_dairy_calves=100,
+#     change_to_baseline_slaughter=100,
+#     reduction_in_pig_breeding=100,
+#     reduction_in_poultry_breeding=100,
+#     months=30,
+#     discount_rate=0,
+#     mother_slaughter=100,
+# ) 
+
+# plt.plot(df_results["Dairy Pop"])
+
+
+
+
+
+
 # Run app
-if __name__ == "__main__":
-    app.run_server(debug=False, port=8055)
+if dash_display == 1:
+    if __name__ == "__main__":
+        app.run_server(debug=False, port=8055)

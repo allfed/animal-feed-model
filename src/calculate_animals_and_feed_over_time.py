@@ -25,11 +25,11 @@ class CalculateAnimalOutputs:
 
     def get_example_data(self):
         result = self.calculate_feed_and_animals(
-            reduction_in_beef_calves=100,
+            reduction_in_beef_calves=0,
             reduction_in_dairy_calves=0,
-            increase_in_slaughter=100,
-            reduction_in_pig_breeding=100,
-            reduction_in_poultry_breeding=100,
+            increase_in_slaughter=0,
+            reduction_in_pig_breeding=0,
+            reduction_in_poultry_breeding=0,
             months=12,
             discount_rate=0,
             mother_slaughter=50,
@@ -431,6 +431,15 @@ class CalculateAnimalOutputs:
         plt.show()
         return df_final
 
-
-cao = CalculateAnimalOutputs()
-results = cao.get_example_data()
+coa = CalculateAnimalOutputs()
+feed_dairy_meat_results = coa.calculate_feed_and_animals(
+    reduction_in_beef_calves=100,
+    reduction_in_dairy_calves=100,
+    reduction_in_pig_breeding=100,
+    reduction_in_poultry_breeding=100,
+    increase_in_slaughter=1,
+    months=12, #120 months
+    discount_rate=0,
+    mother_slaughter=0,
+    use_grass_and_residues_for_dairy=True,
+)
