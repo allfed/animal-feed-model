@@ -19,7 +19,7 @@ df_cattle["Qty"] = df_cattle["Qty"].astype("float")
 
 dash_display = 1
 
-if dash_display==1:
+if dash_display == 1:
     #### Do Dash things below, skip ahead to callback function for the main event
     # Build your components
     app = Dash(__name__, external_stylesheets=[dbc.themes.LUX])
@@ -153,7 +153,6 @@ if dash_display==1:
         body=True,
     )
 
-
     # Customize your own Layout
     app.layout = dbc.Container(
         [
@@ -172,11 +171,9 @@ if dash_display==1:
             dbc.Row([dbc.Col([bar4], width=12)], justify="center"),
             dbc.Row([dbc.Col([scatter], width=12)], justify="center"),
             dbc.Row([dbc.Col([scatter2], width=12)], justify="center"),
-            
         ],
         fluid=True,
     )
-
 
 
 #### Callback function here, this is where it all happens
@@ -202,7 +199,6 @@ if dash_display==1:
 )
 
 # def feed_model(
-    
 
 
 def update_graph(
@@ -230,8 +226,8 @@ def update_graph(
 
     # poultry
     total_poultry = (
-        9177200
-    )  # USDA everything is in 1000 head, so divide this number by 1000
+        9177200  # USDA everything is in 1000 head, so divide this number by 1000
+    )
     poultry_slaughter_pm = 853670.0  # USDA
     chicks_pm = poultry_slaughter_pm  # assume the same, no data
     poultryGestation = 1  # actaully 21 days, let's round to 1 month
@@ -319,7 +315,9 @@ def update_graph(
 
     ## Slaughtering Updates, increases from slider
     total_slaughter_cap_hours *= change_to_baseline_slaughter  # measured in hours
-    current_cow_slaughter = cow_slaughter_pm * change_to_baseline_slaughter  # measured in head
+    current_cow_slaughter = (
+        cow_slaughter_pm * change_to_baseline_slaughter
+    )  # measured in head
     current_poultry_slaughter = (
         poultry_slaughter_pm * change_to_baseline_slaughter
     )  # measured in head
@@ -596,11 +594,7 @@ def update_graph(
     )  # returned objects are assigned to the component property of the Output
 
 
-
-
-
-
-[fig,fig,fig,fig,fig,fig,string] = update_graph(
+[fig, fig, fig, fig, fig, fig, string] = update_graph(
     reduction_in_beef_calves=100,
     reduction_in_dairy_calves=100,
     change_to_baseline_slaughter=100,
@@ -609,14 +603,10 @@ def update_graph(
     months=30,
     discount_rate=0,
     mother_slaughter=100,
-) 
+)
 
 print("yeahhh")
 # plt.plot(df_results["Dairy Pop"])
-
-
-
-
 
 
 # Run app

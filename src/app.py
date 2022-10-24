@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 Define functions
 """
 
+
 def create_plotly_figs(df_final):
 
     graph_colours = ["#3D87CB", "#F0B323", "#DC582A", "#674230", "#3A913F", "#75787B"]
@@ -62,15 +63,9 @@ def create_plotly_figs(df_final):
     ).update_layout(yaxis_title="Head")
     fig6 = px.line(df_final, x="Month", y=["Combined Feed"])
 
-    return (
-        fig1,
-        fig2,
-        fig3,
-        fig4,
-        fig5,
-        fig6
-        )
-        
+    return (fig1, fig2, fig3, fig4, fig5, fig6)
+
+
 def calculate_feed_and_animals(
     reduction_in_beef_calves,
     reduction_in_dairy_calves,
@@ -81,7 +76,7 @@ def calculate_feed_and_animals(
     discount_rate,
     mother_slaughter,
     use_grass_and_residues_for_dairy,
-    animal_inputs
+    animal_inputs,
 ):  # function arguments come from the component property of the Input (in this case, the sliders)
 
     tons_to_kcals = (
@@ -100,10 +95,14 @@ def calculate_feed_and_animals(
     piglets_per_litter = animal_inputs.dataframe.loc["PigsPerLitter", "Qty"]
 
     # poultry
-    total_poultry =  animal_inputs.dataframe.loc["Broiler Population", "Qty"] 
-    poultry_slaughter_pm = animal_inputs.dataframe.loc["poultry_slaughter_pm", "Qty"]  # USDA
+    total_poultry = animal_inputs.dataframe.loc["Broiler Population", "Qty"]
+    poultry_slaughter_pm = animal_inputs.dataframe.loc[
+        "poultry_slaughter_pm", "Qty"
+    ]  # USDA
     chicks_pm = poultry_slaughter_pm  # assume the same, no data
-    poultryGestation = animal_inputs.dataframe.loc["Chicken Gestation", "Qty"]  # USDA  # actaully 21 days, let's round to 1 month
+    poultryGestation = animal_inputs.dataframe.loc[
+        "Chicken Gestation", "Qty"
+    ]  # USDA  # actaully 21 days, let's round to 1 month
 
     # cows (more complex, as need to split dairy and beef)
     total_calves = animal_inputs.dataframe.loc["Calves under 500 pounds", "Qty"]
@@ -129,9 +128,7 @@ def calculate_feed_and_animals(
     dairy_calf_steers = dairy_calves / 2
     dairy_calf_girls = dairy_calves / 2
 
-    calves_destined_for_beef_ratio = (
-        beef_calves + dairy_calf_steers
-    ) / total_calves
+    calves_destined_for_beef_ratio = (beef_calves + dairy_calf_steers) / total_calves
     new_beef_calfs = calves_destined_for_beef_ratio * new_calves_per_year
     new_dairy_calfs = new_calves_per_year - new_beef_calfs
     new_beef_calfs_pm = new_beef_calfs / 12
@@ -167,9 +164,7 @@ def calculate_feed_and_animals(
     current_pregnant_sows = piglets_pm / piglets_per_litter
     current_pregnant_cows = new_beef_calfs_pm / calves_per_mother
     sow_slaughter_percent = mother_slaughter  # of total percent of pig slaughter
-    mother_cow_slaughter_percent = (
-        mother_slaughter  # of total percent of cow slaughter
-    )
+    mother_cow_slaughter_percent = mother_slaughter  # of total percent of cow slaughter
 
     #### Slaughtering ####
     ### Slaughtering variables (currently hardcoded !!)
@@ -193,9 +188,7 @@ def calculate_feed_and_animals(
 
     ## Slaughtering Updates, increases from slider
     total_slaughter_cap_hours *= increase_in_slaughter  # measured in hours
-    current_cow_slaughter = (
-        cow_slaughter_pm * increase_in_slaughter
-    )  # measured in head
+    current_cow_slaughter = cow_slaughter_pm * increase_in_slaughter  # measured in head
     current_poultry_slaughter = (
         poultry_slaughter_pm * increase_in_slaughter
     )  # measured in head
@@ -282,9 +275,7 @@ def calculate_feed_and_animals(
             )
 
         # this set up only kills dairy cows when they are getting to the end of their life.
-        current_dairy_slaughter = current_dairy_cattle / (
-            dairy_life_expectancy * 12
-        )
+        current_dairy_slaughter = current_dairy_cattle / (dairy_life_expectancy * 12)
         current_beef_slaughter = current_cow_slaughter - current_dairy_slaughter
         if current_beef_cattle < current_beef_slaughter:
             actual_beef_slaughter = current_beef_cattle  # required due to the difference between actual slaughter and 'slaughter capacity' consider a rewrite of the whole method to distinuguish between these two. For now, this is thr workaround.
@@ -309,66 +300,59 @@ def calculate_feed_and_animals(
             + current_poultry_feed
         )
 
-        print(current_poultry_feed  * feed_unit_adjust)
-        print(current_feed_combined  * feed_unit_adjust)
+        print(current_poultry_feed * feed_unit_adjust)
+        print(current_feed_combined * feed_unit_adjust)
 
         ### Generate list (before new totals have been calculated)
         # magnitude adjust moves the numbers from per thousnad head to per head (or other)
         # feed adjust turns lbs in to tons
         d.append(
             {
-                "Beef Pop": current_beef_cattle ,
-                "Beef Born": new_beef_calfs_pm ,
+                "Beef Pop": current_beef_cattle,
+                "Beef Born": new_beef_calfs_pm,
                 "Beef Slaughtered": actual_beef_slaughter,
-                "Beef Slaughtered Hours": actual_beef_slaughter
-                * cow_slaughter_hours,
+                "Beef Slaughtered Hours": actual_beef_slaughter * cow_slaughter_hours,
                 "Beef Slaughtered Hours %": actual_beef_slaughter
                 * cow_slaughter_hours
                 / total_slaughter_cap_hours,
                 "Beef Other Death": other_beef_death,
                 "Beef Feed": current_beef_cattle
-                * beef_cow_feed_pm_per_cow                * feed_unit_adjust,
+                * beef_cow_feed_pm_per_cow
+                * feed_unit_adjust,
                 "Dairy Pop": current_dairy_cattle,
                 "Dairy Born": new_dairy_calfs_pm,
                 "Dairy Slaughtered": current_dairy_slaughter,
                 "Dairy Slaughtered Hours": current_dairy_slaughter
-                * cow_slaughter_hours               ,
+                * cow_slaughter_hours,
                 "Dairy Slaughtered Hours %": current_dairy_slaughter
                 * cow_slaughter_hours
                 / total_slaughter_cap_hours,
                 "Dairy Other Death": other_dairy_death,
                 "Dairy Feed": current_dairy_cattle
                 * dairy_cow_feed_pm_per_cow
-               
                 * feed_unit_adjust,
                 "Pigs Pop": current_total_pigs,
                 "Pig Born": new_pigs_pm,
                 "Pig Slaughtered": current_pig_slaughter,
-                "Pig Slaughtered Hours": current_pig_slaughter
-                * pig_slaughter_hours
-               ,
+                "Pig Slaughtered Hours": current_pig_slaughter * pig_slaughter_hours,
                 "Pig Slaughtered Hours %": current_pig_slaughter
                 * pig_slaughter_hours
                 / total_slaughter_cap_hours,
                 "Pigs Feed": current_total_pigs
-                * pig_feed_pm_per_pig * feed_unit_adjust,
-                "Poultry Pop": current_total_poultry
-               ,
-                "Poultry Born": new_poultry_pm
-               ,
-                "Poultry Slaughtered": current_poultry_slaughter
-               ,
+                * pig_feed_pm_per_pig
+                * feed_unit_adjust,
+                "Poultry Pop": current_total_poultry,
+                "Poultry Born": new_poultry_pm,
+                "Poultry Slaughtered": current_poultry_slaughter,
                 "Poultry Slaughtered Hours": current_poultry_slaughter
-                * poultry_slaughter_hours
-               ,
+                * poultry_slaughter_hours,
                 "Poultry Slaughtered Hours %": current_poultry_slaughter
                 * poultry_slaughter_hours
                 / total_slaughter_cap_hours,
                 "Poultry Feed": current_total_poultry
                 * poultry_feed_pm_per_bird
                 * feed_unit_adjust,
-                "Combined Feed": current_feed_combined
-                * feed_unit_adjust,
+                "Combined Feed": current_feed_combined * feed_unit_adjust,
                 "Combined Saved Feed": (baseline_feed - current_feed_combined)
                 * feed_unit_adjust,
                 "Month": i,
@@ -399,46 +383,67 @@ def calculate_feed_and_animals(
         if current_dairy_cattle < 0:
             current_dairy_cattle = 0
 
-
-
     ### End of loop, start summary
 
     df_final = pd.DataFrame(d)
 
-
     return df_final
+
 
 """
 Defne Classes
 """
 
+
 class ModelAnimalInputs:
     def __init__(self, dataframe):
         self.dataframe = dataframe
 
+
 class ModelSlidersDefaults:
     def __init__(self, dataframe):
-        self.reduction_in_beef_calves = dataframe.loc["reduction_in_beef_calves","Qty"]
-        self.reduction_in_dairy_calves = dataframe.loc["reduction_in_dairy_calves","Qty"]
-        self.change_to_baseline_slaughter = dataframe.loc["change_to_baseline_slaughter","Qty"]
-        self.reduction_in_pig_breeding = dataframe.loc["reduction_in_pig_breeding","Qty"]
-        self.reduction_in_poultry_breeding = dataframe.loc["reduction_in_poultry_breeding","Qty"]
-        self.months = dataframe.loc["months","Qty"]
-        self.discount_rate = dataframe.loc["discount_rate","Qty"]
-        self.mother_slaughter = dataframe.loc["mother_slaughter","Qty"]
-        self.use_grass_and_residues_for_dairy = dataframe.loc["use_grass_and_residues_for_dairy","Qty"]
+        self.reduction_in_beef_calves = dataframe.loc["reduction_in_beef_calves", "Qty"]
+        self.reduction_in_dairy_calves = dataframe.loc[
+            "reduction_in_dairy_calves", "Qty"
+        ]
+        self.change_to_baseline_slaughter = dataframe.loc[
+            "change_to_baseline_slaughter", "Qty"
+        ]
+        self.reduction_in_pig_breeding = dataframe.loc[
+            "reduction_in_pig_breeding", "Qty"
+        ]
+        self.reduction_in_poultry_breeding = dataframe.loc[
+            "reduction_in_poultry_breeding", "Qty"
+        ]
+        self.months = dataframe.loc["months", "Qty"]
+        self.discount_rate = dataframe.loc["discount_rate", "Qty"]
+        self.mother_slaughter = dataframe.loc["mother_slaughter", "Qty"]
+        self.use_grass_and_residues_for_dairy = dataframe.loc[
+            "use_grass_and_residues_for_dairy", "Qty"
+        ]
+
 
 class ModelSliderInputs:
     def __init__(self, dataframe):
-        self.reduction_in_beef_calves = dataframe.loc["reduction_in_beef_calves","Qty"]
-        self.reduction_in_dairy_calves = dataframe.loc["reduction_in_dairy_calves","Qty"]
-        self.change_to_baseline_slaughter = dataframe.loc["change_to_baseline_slaughter","Qty"]
-        self.reduction_in_pig_breeding = dataframe.loc["reduction_in_pig_breeding","Qty"]
-        self.reduction_in_poultry_breeding = dataframe.loc["reduction_in_poultry_breeding","Qty"]
-        self.months = dataframe.loc["months","Qty"]
-        self.discount_rate = dataframe.loc["discount_rate","Qty"]
-        self.mother_slaughter = dataframe.loc["mother_slaughter","Qty"]
-        self.use_grass_and_residues_for_dairy = dataframe.loc["use_grass_and_residues_for_dairy","Qty"]
+        self.reduction_in_beef_calves = dataframe.loc["reduction_in_beef_calves", "Qty"]
+        self.reduction_in_dairy_calves = dataframe.loc[
+            "reduction_in_dairy_calves", "Qty"
+        ]
+        self.change_to_baseline_slaughter = dataframe.loc[
+            "change_to_baseline_slaughter", "Qty"
+        ]
+        self.reduction_in_pig_breeding = dataframe.loc[
+            "reduction_in_pig_breeding", "Qty"
+        ]
+        self.reduction_in_poultry_breeding = dataframe.loc[
+            "reduction_in_poultry_breeding", "Qty"
+        ]
+        self.months = dataframe.loc["months", "Qty"]
+        self.discount_rate = dataframe.loc["discount_rate", "Qty"]
+        self.mother_slaughter = dataframe.loc["mother_slaughter", "Qty"]
+        self.use_grass_and_residues_for_dairy = dataframe.loc[
+            "use_grass_and_residues_for_dairy", "Qty"
+        ]
 
 
 """
@@ -447,12 +452,20 @@ Start main function
 # Import CSV to dataframes
 PATH = pathlib.Path(__file__).parent
 DATA_PATH = PATH.joinpath("../data").resolve()
-df_animals = pd.read_csv(DATA_PATH.joinpath("InputDataAndSources.csv"), index_col="Variable")
+df_animals = pd.read_csv(
+    DATA_PATH.joinpath("InputDataAndSources.csv"), index_col="Variable"
+)
 
 ## various scenarios can be used here
-df_baseline_vars = pd.read_csv(DATA_PATH.joinpath("default_slider_values.csv"), index_col="Variable") #change this to saved model values (optimistic/pessimistic etc.)
-df_optimistic_vars = pd.read_csv(DATA_PATH.joinpath("optimistic_slider_values.csv"), index_col="Variable") #change this to saved model values (optimistic/pessimistic etc.)
-df_pessimistic_vars = pd.read_csv(DATA_PATH.joinpath("default_slider_values.csv"), index_col="Variable") #change this to saved model values (optimistic/pessimistic etc.)
+df_baseline_vars = pd.read_csv(
+    DATA_PATH.joinpath("default_slider_values.csv"), index_col="Variable"
+)  # change this to saved model values (optimistic/pessimistic etc.)
+df_optimistic_vars = pd.read_csv(
+    DATA_PATH.joinpath("optimistic_slider_values.csv"), index_col="Variable"
+)  # change this to saved model values (optimistic/pessimistic etc.)
+df_pessimistic_vars = pd.read_csv(
+    DATA_PATH.joinpath("default_slider_values.csv"), index_col="Variable"
+)  # change this to saved model values (optimistic/pessimistic etc.)
 
 ## poplulate the data in to classes
 animal_inputs = ModelAnimalInputs(df_animals)
@@ -469,17 +482,13 @@ df_final = calculate_feed_and_animals(
     slider_inputs.discount_rate,
     slider_inputs.mother_slaughter,
     slider_inputs.use_grass_and_residues_for_dairy,
-    animal_inputs
+    animal_inputs,
 )
 
 plt.figure()
 plt.plot(df_final["Combined Feed"])
 plt.title("Combined Feed")
 plt.show()
-
-
-
-
 
 
 # ### DASH section ###
@@ -652,11 +661,10 @@ plt.show()
 #             dbc.Row([dbc.Col([bar4], width=12)], justify="center"),
 #             dbc.Row([dbc.Col([scatter], width=12)], justify="center"),
 #             dbc.Row([dbc.Col([scatter2], width=12)], justify="center"),
-            
+
 #         ],
 #         fluid=True,
 #     )
-
 
 
 # #### Callback function here, this is where it all happens

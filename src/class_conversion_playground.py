@@ -16,10 +16,11 @@ DATA_PATH = PATH.joinpath("../data").resolve()
 df = pd.read_csv(DATA_PATH.joinpath("InputDataAndSources.csv"), index_col="Variable")
 df["Qty"] = df["Qty"].astype("float")
 
-class AnimalInputs:
 
+class AnimalInputs:
     def __init__(self, my_dataframe):
         self.dataframe = my_dataframe
+
 
 class CalculateAnimalOutputs:
     def init():
@@ -50,9 +51,6 @@ class CalculateAnimalOutputs:
         ]
 
         return important_results
-
-
-
 
     def calculate_feed_and_animals(
         self,
@@ -435,7 +433,6 @@ class CalculateAnimalOutputs:
         plt.title("Dairy Pop")
         plt.show()
         return df_final
-
 
 
 a = AnimalInputs(df)
