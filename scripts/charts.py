@@ -12,10 +12,13 @@ import datetime
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import matplotlib.ticker as mtick
-plt.style.use("https://raw.githubusercontent.com/allfed/ALLFED-matplotlib-style-sheet/main/ALLFED.mplstyle")
+
+plt.style.use(
+    "https://raw.githubusercontent.com/allfed/ALLFED-matplotlib-style-sheet/main/ALLFED.mplstyle"
+)
 
 
-def percentage_change(col1,col2):
+def percentage_change(col1, col2):
     return ((col2 - col1) / col1) * 100
 
 
@@ -57,7 +60,10 @@ def slaughter_week_creator():
 
 PATH = pathlib.Path(__file__).parent
 DATA_PATH = PATH.joinpath("../data").resolve()
-df = pd.read_csv(DATA_PATH.joinpath("usda_other_data/double_year_percentChange.csv"), index_col="Date")
+df = pd.read_csv(
+    DATA_PATH.joinpath("usda_other_data/double_year_percentChange.csv"),
+    index_col="Date",
+)
 df.index = pd.to_datetime(df.index)
 
 # graph_colours = ["#75787B", "#3A913F", "#DC582A", "#674230", "#3A913F", "#75787B"]
@@ -69,14 +75,13 @@ df.index = pd.to_datetime(df.index)
 # df.resample('D').interpolate()[::7]
 
 
-
 fig, ax = plt.subplots(constrained_layout=True)
 locator = mdates.MonthLocator()
 formatter = mdates.ConciseDateFormatter(locator)
 ax.xaxis.set_major_locator(locator)
 ax.xaxis.set_major_formatter(formatter)
 ax.yaxis.set_major_formatter(mtick.PercentFormatter())
-plt.plot(df["PercentChange"]*0)
+plt.plot(df["PercentChange"] * 0)
 plt.plot(df["PercentChange"])
 # plt.plot(df["Cattle"])
 # plt.plot(df["Cattle.1"])
@@ -86,8 +91,6 @@ plt.ylabel("Percentage Change")
 ax.xaxis.label.set_color("dimgrey")
 ax.yaxis.label.set_color("dimgrey")
 plt.show()
-
-
 
 
 # fig = px.line(

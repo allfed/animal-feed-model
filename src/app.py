@@ -6,17 +6,21 @@ import numpy as np
 from dash import Dash, dcc, html, Output, Input, dash_table  # pip install dash
 import dash_bootstrap_components as dbc  # pip install dash-bootstrap-components
 import matplotlib.pyplot as plt
-plt.style.use("https://raw.githubusercontent.com/allfed/ALLFED-matplotlib-style-sheet/main/ALLFED.mplstyle")
+
+plt.style.use(
+    "https://raw.githubusercontent.com/allfed/ALLFED-matplotlib-style-sheet/main/ALLFED.mplstyle"
+)
 
 
-#CSV changes
-#changes to head/1000 head
-#dash vs matplotlib
+# CSV changes
+# changes to head/1000 head
+# dash vs matplotlib
 
 
 """
 Define functions
 """
+
 
 def create_plotly_figs(df_final):
 
@@ -69,6 +73,7 @@ def create_plotly_figs(df_final):
     fig6 = px.line(df_final, x="Month", y=["Combined Feed"])
 
     return (fig1, fig2, fig3, fig4, fig5, fig6)
+
 
 def calculate_feed_and_animals(
     reduction_in_beef_calves,
@@ -393,6 +398,7 @@ def calculate_feed_and_animals(
 
     return df_final
 
+
 """
 Defne Classes
 """
@@ -472,7 +478,9 @@ df_pessimistic_vars = pd.read_csv(
 
 ## poplulate the data in to classes
 animal_inputs = ModelAnimalInputs(df_animals)
-slider_inputs = ModelSlidersDefaults(df_baseline_vars) #### THIS IS THE SCENARIO CHOOSER
+slider_inputs = ModelSlidersDefaults(
+    df_baseline_vars
+)  #### THIS IS THE SCENARIO CHOOSER
 
 
 df_final = calculate_feed_and_animals(
@@ -499,7 +507,6 @@ plt.show()
 
 # ### Start DASH section ###
 ## Currently commented out, need to seperate in to packages to avoid this I believe
-
 
 
 # #### Do Dash things below, skip ahead to callback function for the main event
