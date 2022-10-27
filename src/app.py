@@ -21,6 +21,29 @@ plt.style.use(
 Define functions
 """
 
+def format_plotly_graphs(fig):
+
+    fig.update_layout(
+        font_family="Serif",
+        font_color="dimgrey",
+        title_font_family="Serif",
+        title_font_color="dimgrey",
+        title={'font': {'size': 30}},
+        legend_title_font_color="dimgrey",
+        legend=dict(title="Legend"),
+        legend_traceorder="reversed",
+        font=dict(size=16)
+    )
+    
+    fig.update_layout(legend=dict(
+    yanchor="top",
+    y=0.99,
+    xanchor="right",
+    x=0.99
+    ))
+
+    return fig
+
 
 def create_plotly_figs(df_final):
 
@@ -29,20 +52,20 @@ def create_plotly_figs(df_final):
     fig1 = px.line(
         df_final,
         x="Month",
-        y=["Beef Born", "Dairy Born", "Pig Born", "Poultry Born"],
+        y=["Dairy Born", "Beef Born", "Pig Born", "Poultry Born"],
         color_discrete_sequence=graph_colours,
     ).update_layout(yaxis_title="Head")
     fig2 = px.bar(
         df_final,
         x="Month",
-        y=["Beef Pop", "Dairy Pop", "Pigs Pop", "Poultry Pop"],
+        y=["Dairy Pop", "Beef Pop", "Pigs Pop", "Poultry Pop"],
         title="Population Make-up",
         color_discrete_sequence=graph_colours,
     ).update_layout(yaxis_title="Head")
     fig3 = px.bar(
         df_final,
         x="Month",
-        y=["Beef Feed", "Dairy Feed", "Pigs Feed", "Poultry Feed"],
+        y=["Dairy Feed","Beef Feed", "Pigs Feed", "Poultry Feed"],
         title="Feed Requirements",
         color_discrete_sequence=graph_colours,
     ).update_layout(yaxis_title="Metric Tonnes")
@@ -50,20 +73,22 @@ def create_plotly_figs(df_final):
         df_final,
         x="Month",
         y=[
-            "Beef Slaughtered Hours %",
             "Dairy Slaughtered Hours %",
+            "Beef Slaughtered Hours %",
             "Pig Slaughtered Hours %",
             "Poultry Slaughtered Hours %",
         ],
-        title="Slaughter Worker Hours Fractional Distribution",
+        title="Slaughter Worker Effective Hours as a Percentage of Total Capacity",
         color_discrete_sequence=graph_colours,
-    ).update_layout(yaxis_title="Fraction Hours")
+    ).update_layout(yaxis_title="Percentage Hours")
+    fig4.update_yaxes(tickformat=".2%")
+
     fig5 = px.bar(
         df_final,
         x="Month",
         y=[
-            "Beef Slaughtered",
             "Dairy Slaughtered",
+            "Beef Slaughtered",
             "Pig Slaughtered",
             "Poultry Slaughtered",
         ],
@@ -71,6 +96,15 @@ def create_plotly_figs(df_final):
         color_discrete_sequence=graph_colours,
     ).update_layout(yaxis_title="Head")
     fig6 = px.line(df_final, x="Month", y=["Combined Feed"])
+
+    fig1 = format_plotly_graphs(fig1)
+    fig2 = format_plotly_graphs(fig2)
+    fig3 = format_plotly_graphs(fig3)
+    fig4 = format_plotly_graphs(fig4)
+    fig5 = format_plotly_graphs(fig5)
+    fig6 = format_plotly_graphs(fig6)
+
+    
 
     return (fig1, fig2, fig3, fig4, fig5, fig6)
 
@@ -472,14 +506,14 @@ df_baseline_vars = pd.read_csv(
 df_optimistic_vars = pd.read_csv(
     DATA_PATH.joinpath("optimistic_slider_values.csv"), index_col="Variable"
 )  # change this to saved model values (optimistic/pessimistic etc.)
-df_pessimistic_vars = pd.read_csv(
-    DATA_PATH.joinpath("default_slider_values.csv"), index_col="Variable"
+df_scenario1_vars = pd.read_csv(
+    DATA_PATH.joinpath("scneario1_slider_values.csv"), index_col="Variable"
 )  # change this to saved model values (optimistic/pessimistic etc.)
 
 ## poplulate the data in to classes
 animal_inputs = ModelAnimalInputs(df_animals)
 slider_inputs = ModelSlidersDefaults(
-    df_baseline_vars
+    df_optimistic_vars
 )  #### THIS IS THE SCENARIO CHOOSER
 
 
@@ -498,10 +532,10 @@ df_final = calculate_feed_and_animals(
 
 ## Example of matplotlib plotting ##
 
-plt.figure()
-plt.plot(df_final["Combined Feed"])
-plt.title("Combined Feed")
-plt.show()
+# plt.figure()
+# plt.plot(df_final["Combined Feed"])
+# plt.title("Combined Feed")
+# plt.show()
 
 ### End Model Section ###
 
@@ -509,241 +543,241 @@ plt.show()
 ## Currently commented out, need to seperate in to packages to avoid this I believe
 
 
-# #### Do Dash things below, skip ahead to callback function for the main event
-# # Build your components
-# app = Dash(__name__, external_stylesheets=[dbc.themes.LUX])
+#### Do Dash things below, skip ahead to callback function for the main event
+# Build your components
+app = Dash(__name__, external_stylesheets=[dbc.themes.LUX])
 
-# # Declare server for Heroku deployment. Needed for Procfile.
-# server = app.server  # for heroku deployment
+# Declare server for Heroku deployment. Needed for Procfile.
+server = app.server  # for heroku deployment
 
-# mytitle = dcc.Markdown(children="")
-# # table_out = dcc.Markdown(children="")
-# # mysubtitle = dcc.Markdown(children="")
-# scatter = dcc.Graph(figure={})
-# scatter2 = dcc.Graph(figure={})
-# bar = dcc.Graph(figure={})
-# bar2 = dcc.Graph(figure={})
-# bar3 = dcc.Graph(figure={})
-# bar4 = dcc.Graph(figure={})
+mytitle = dcc.Markdown(children="")
+# table_out = dcc.Markdown(children="")
+# mysubtitle = dcc.Markdown(children="")
+scatter = dcc.Graph(figure={})
+scatter2 = dcc.Graph(figure={})
+bar = dcc.Graph(figure={})
+bar2 = dcc.Graph(figure={})
+bar3 = dcc.Graph(figure={})
+bar4 = dcc.Graph(figure={})
 
-# ### Create slider components on a card
-# controls = dbc.Card(
-#     [
-#         html.Div(
-#             [
-#                 dbc.Label("Baseline Slaughter Rate"),
-#                 dcc.Slider(
-#                     0,
-#                     600,
-#                     value=slider_inputs.change_to_baseline_slaughter,
-#                     id="myslider3",
-#                     updatemode="drag",
-#                     tooltip={"placement": "bottom", "always_visible": True},
-#                 ),
-#             ]
-#         ),
-#         html.Div(
-#             [
-#                 dbc.Label(
-#                     "Proportion of Slaughter which is mothers"
-#                 ),  # (proxy for termination of pregnancies too, but not the same as a percentage)
-#                 dcc.Slider(
-#                     0,
-#                     100,
-#                     value=slider_inputs.mother_slaughter,
-#                     id="myslider8",
-#                     updatemode="drag",
-#                     tooltip={"placement": "bottom", "always_visible": True},
-#                 ),
-#             ]
-#         ),
-#         html.Div(
-#             [
-#                 dbc.Label(
-#                     "Discount Rate for Labour/Technology Transfer between species"
-#                 ),
-#                 dcc.Slider(
-#                     0,
-#                     100,
-#                     value=slider_inputs.discount_rate,
-#                     id="myslider7",
-#                     updatemode="drag",
-#                     tooltip={"placement": "bottom", "always_visible": True},
-#                 ),
-#             ]
-#         ),
-#         html.Div(
-#             [
-#                 dbc.Label("Decrease Beef Birth Rate"),
-#                 dcc.Slider(
-#                     0,
-#                     100,
-#                     value=slider_inputs.reduction_in_beef_calves,
-#                     id="myslider1",
-#                     updatemode="drag",
-#                     tooltip={"placement": "bottom", "always_visible": True},
-#                 ),
-#             ]
-#         ),
-#         html.Div(
-#             [
-#                 dbc.Label("Decrease Dairy Birth Rate"),
-#                 dcc.Slider(
-#                     0,
-#                     100,
-#                     value=slider_inputs.reduction_in_dairy_calves,
-#                     id="myslider2",
-#                     updatemode="drag",
-#                     tooltip={"placement": "bottom", "always_visible": True},
-#                 ),
-#             ]
-#         ),
-#         html.Div(
-#             [
-#                 dbc.Label("Reduction Pig Breeding"),
-#                 dcc.Slider(
-#                     0,
-#                     100,
-#                     value=slider_inputs.reduction_in_pig_breeding,
-#                     id="myslider4",
-#                     updatemode="drag",
-#                     tooltip={"placement": "bottom", "always_visible": True},
-#                 ),
-#             ]
-#         ),
-#         html.Div(
-#             [
-#                 dbc.Label("Reduction Poultry Breeding"),
-#                 dcc.Slider(
-#                     0,
-#                     100,
-#                     value=slider_inputs.reduction_in_poultry_breeding,
-#                     id="myslider5",
-#                     updatemode="drag",
-#                     tooltip={"placement": "bottom", "always_visible": True},
-#                 ),
-#             ]
-#         ),
-#         html.Div(
-#             [
-#                 dbc.Label("Use Residues for Dairy"),
-#                 dcc.Slider(
-#                     0,
-#                     1,
-#                     value=slider_inputs.use_grass_and_residues_for_dairy,
-#                     step=1,
-#                     id="myslider9",
-#                     updatemode="drag",
-#                     tooltip={"placement": "bottom", "always_visible": True},
-#                 ),
-#             ]
-#         ),
-#         html.Div(
-#             [
-#                 dbc.Label("Months"),
-#                 dcc.Slider(
-#                     0,
-#                     24,
-#                     value=slider_inputs.months,
-#                     step=1,
-#                     id="myslider6",
-#                     updatemode="drag",
-#                     tooltip={"placement": "bottom", "always_visible": True},
-#                 ),
-#             ]
-#         ),
-#     ],
-#     body=True,
-# )
-
-
-# # Customize your own Layout
-# app.layout = dbc.Container(
-#     [
-#         dbc.Row([dbc.Col([mytitle], width=6)], justify="center"),
-#         # dbc.Row([dbc.Col([mysubtitle], width=6)], justify="center"),
-#         dbc.Row(
-#             [
-#                 dbc.Col(controls, md=3),
-#                 dbc.Col([bar], width=9),
-#             ],
-#             align="center",
-#         ),
-#         html.Hr(),
-#         dbc.Row([dbc.Col([bar2], width=12)], justify="center"),
-#         dbc.Row([dbc.Col([bar3], width=12)], justify="center"),
-#         dbc.Row([dbc.Col([bar4], width=12)], justify="center"),
-#         dbc.Row([dbc.Col([scatter], width=12)], justify="center"),
-#         dbc.Row([dbc.Col([scatter2], width=12)], justify="center"),
-
-#     ],
-#     fluid=True,
-# )
+### Create slider components on a card
+controls = dbc.Card(
+    [
+        html.Div(
+            [
+                dbc.Label("Baseline Slaughter Rate"),
+                dcc.Slider(
+                    0,
+                    600,
+                    value=slider_inputs.change_to_baseline_slaughter,
+                    id="myslider3",
+                    updatemode="drag",
+                    tooltip={"placement": "bottom", "always_visible": True},
+                ),
+            ]
+        ),
+        html.Div(
+            [
+                dbc.Label(
+                    "Proportion of Slaughter which is mothers"
+                ),  # (proxy for termination of pregnancies too, but not the same as a percentage)
+                dcc.Slider(
+                    0,
+                    100,
+                    value=slider_inputs.mother_slaughter,
+                    id="myslider8",
+                    updatemode="drag",
+                    tooltip={"placement": "bottom", "always_visible": True},
+                ),
+            ]
+        ),
+        html.Div(
+            [
+                dbc.Label(
+                    "Discount Rate for Labour/Technology Transfer between species"
+                ),
+                dcc.Slider(
+                    0,
+                    100,
+                    value=slider_inputs.discount_rate,
+                    id="myslider7",
+                    updatemode="drag",
+                    tooltip={"placement": "bottom", "always_visible": True},
+                ),
+            ]
+        ),
+        html.Div(
+            [
+                dbc.Label("Decrease Beef Birth Rate"),
+                dcc.Slider(
+                    0,
+                    100,
+                    value=slider_inputs.reduction_in_beef_calves,
+                    id="myslider1",
+                    updatemode="drag",
+                    tooltip={"placement": "bottom", "always_visible": True},
+                ),
+            ]
+        ),
+        html.Div(
+            [
+                dbc.Label("Decrease Dairy Birth Rate"),
+                dcc.Slider(
+                    0,
+                    100,
+                    value=slider_inputs.reduction_in_dairy_calves,
+                    id="myslider2",
+                    updatemode="drag",
+                    tooltip={"placement": "bottom", "always_visible": True},
+                ),
+            ]
+        ),
+        html.Div(
+            [
+                dbc.Label("Reduction Pig Breeding"),
+                dcc.Slider(
+                    0,
+                    100,
+                    value=slider_inputs.reduction_in_pig_breeding,
+                    id="myslider4",
+                    updatemode="drag",
+                    tooltip={"placement": "bottom", "always_visible": True},
+                ),
+            ]
+        ),
+        html.Div(
+            [
+                dbc.Label("Reduction Poultry Breeding"),
+                dcc.Slider(
+                    0,
+                    100,
+                    value=slider_inputs.reduction_in_poultry_breeding,
+                    id="myslider5",
+                    updatemode="drag",
+                    tooltip={"placement": "bottom", "always_visible": True},
+                ),
+            ]
+        ),
+        html.Div(
+            [
+                dbc.Label("Use Residues for Dairy"),
+                dcc.Slider(
+                    0,
+                    1,
+                    value=slider_inputs.use_grass_and_residues_for_dairy,
+                    step=1,
+                    id="myslider9",
+                    updatemode="drag",
+                    tooltip={"placement": "bottom", "always_visible": True},
+                ),
+            ]
+        ),
+        html.Div(
+            [
+                dbc.Label("Months"),
+                dcc.Slider(
+                    0,
+                    24,
+                    value=slider_inputs.months,
+                    step=1,
+                    id="myslider6",
+                    updatemode="drag",
+                    tooltip={"placement": "bottom", "always_visible": True},
+                ),
+            ]
+        ),
+    ],
+    body=True,
+)
 
 
-# #### Callback function here, this is where it all happens
-# # Callback allows components to interact plotly
-# @app.callback(
-#     Output(scatter, "figure"),
-#     Output(bar, "figure"),
-#     Output(bar2, "figure"),
-#     Output(bar3, "figure"),
-#     Output(bar4, "figure"),
-#     Output(scatter2, "figure"),
-#     Output(mytitle, "children"),
-#     # Output(table_out, "children"),
-#     # Output(mysubtitle, "children"),
-#     Input("myslider1", "value"),
-#     Input("myslider2", "value"),
-#     Input("myslider3", "value"),
-#     Input("myslider4", "value"),
-#     Input("myslider5", "value"),
-#     Input("myslider6", "value"),
-#     Input("myslider7", "value"),
-#     Input("myslider8", "value"),
-#     Input("myslider9", "value"),
-# )
-# #### Update graphs functions plotly ####
-# def update_graph(
-#     reduction_in_beef_calves,
-#     reduction_in_dairy_calves,
-#     change_to_baseline_slaughter,
-#     reduction_in_pig_breeding,
-#     reduction_in_poultry_breeding,
-#     months,
-#     discount_rate,
-#     mother_slaughter,
-#     use_grass_and_residues_for_dairy
-# ):  # function arguments come from the component property of the Input (in this case, the sliders)
+# Customize your own Layout
+app.layout = dbc.Container(
+    [
+        dbc.Row([dbc.Col([mytitle], width=6)], justify="center"),
+        # dbc.Row([dbc.Col([mysubtitle], width=6)], justify="center"),
+        dbc.Row(
+            [
+                dbc.Col(controls, md=3),
+                dbc.Col([bar], width=9),
+            ],
+            align="center",
+        ),
+        html.Hr(),
+        dbc.Row([dbc.Col([bar2], width=12)], justify="center"),
+        dbc.Row([dbc.Col([bar3], width=12)], justify="center"),
+        dbc.Row([dbc.Col([bar4], width=12)], justify="center"),
+        dbc.Row([dbc.Col([scatter], width=12)], justify="center"),
+        dbc.Row([dbc.Col([scatter2], width=12)], justify="center"),
 
-#     ## Run Model ##
-#     df_final = calculate_feed_and_animals(
-#         reduction_in_beef_calves,
-#         reduction_in_dairy_calves,
-#         change_to_baseline_slaughter,
-#         reduction_in_pig_breeding,
-#         reduction_in_poultry_breeding,
-#         months,
-#         discount_rate,
-#         mother_slaughter,
-#         use_grass_and_residues_for_dairy,
-#         animal_inputs
-#     )
+    ],
+    fluid=True,
+)
 
-#     ## Create figures ##
-#     [fig1,fig2,fig3,fig4,fig5,fig6] = create_plotly_figs(df_final)
-#     # return figures and outputs
-#     return (
-#         fig1,
-#         fig2,
-#         fig3,
-#         fig4,
-#         fig5,
-#         fig6,
-#         "Animal Feed Model"
-#         # f"# Total Feed Use Reduction over {months} months is {months} million tonnes from a baseline of {months} million tonnes",
-#     )  # returned objects are assigned to the component property of the Output
 
-# # Run app
-# if __name__ == "__main__":
-#     app.run_server(debug=False, port=8055)
+#### Callback function here, this is where it all happens
+# Callback allows components to interact plotly
+@app.callback(
+    Output(scatter, "figure"),
+    Output(bar, "figure"),
+    Output(bar2, "figure"),
+    Output(bar3, "figure"),
+    Output(bar4, "figure"),
+    Output(scatter2, "figure"),
+    Output(mytitle, "children"),
+    # Output(table_out, "children"),
+    # Output(mysubtitle, "children"),
+    Input("myslider1", "value"),
+    Input("myslider2", "value"),
+    Input("myslider3", "value"),
+    Input("myslider4", "value"),
+    Input("myslider5", "value"),
+    Input("myslider6", "value"),
+    Input("myslider7", "value"),
+    Input("myslider8", "value"),
+    Input("myslider9", "value"),
+)
+#### Update graphs functions plotly ####
+def update_graph(
+    reduction_in_beef_calves,
+    reduction_in_dairy_calves,
+    change_to_baseline_slaughter,
+    reduction_in_pig_breeding,
+    reduction_in_poultry_breeding,
+    months,
+    discount_rate,
+    mother_slaughter,
+    use_grass_and_residues_for_dairy
+):  # function arguments come from the component property of the Input (in this case, the sliders)
+
+    ## Run Model ##
+    df_final = calculate_feed_and_animals(
+        reduction_in_beef_calves,
+        reduction_in_dairy_calves,
+        change_to_baseline_slaughter,
+        reduction_in_pig_breeding,
+        reduction_in_poultry_breeding,
+        months,
+        discount_rate,
+        mother_slaughter,
+        use_grass_and_residues_for_dairy,
+        animal_inputs
+    )
+
+    ## Create figures ##
+    [fig1,fig2,fig3,fig4,fig5,fig6] = create_plotly_figs(df_final)
+    # return figures and outputs
+    return (
+        fig1,
+        fig2,
+        fig3,
+        fig4,
+        fig5,
+        fig6,
+        "Animal Feed Model"
+        # f"# Total Feed Use Reduction over {months} months is {months} million tonnes from a baseline of {months} million tonnes",
+    )  # returned objects are assigned to the component property of the Output
+
+# Run app
+if __name__ == "__main__":
+    app.run_server(debug=False, port=8055)
