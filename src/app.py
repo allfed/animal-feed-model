@@ -24,17 +24,22 @@ Define functions
 def format_plotly_graphs(fig):
 
     fig.update_layout(
-        font_family="Serif",
+        font_family="Droid Sans Mono",
+        # “Arial”, “Balto”, “Courier New”, “Droid Sans”, “Droid Serif”, “Droid Sans Mono”, “Gravitas One”, “Old Standard TT”, “Open Sans”, “Overpass”, “PT Sans Narrow”, “Raleway”, “Times New Roman”.
         font_color="dimgrey",
-        title_font_family="Serif",
         title_font_color="dimgrey",
         title={'font': {'size': 30}},
         legend_title_font_color="dimgrey",
         legend=dict(title="Legend"),
         legend_traceorder="reversed",
-        font=dict(size=16)
+        font=dict(size=16),
+        plot_bgcolor = 'white',
+        paper_bgcolor = 'white',
     )
     
+    fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor="#e6e6e6")
+    fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor="#e6e6e6")
+
     fig.update_layout(legend=dict(
     yanchor="top",
     y=0.99,
@@ -73,10 +78,10 @@ def create_plotly_figs(df_final):
         df_final,
         x="Month",
         y=[
-            "Dairy Slaughtered Hours %",
-            "Beef Slaughtered Hours %",
-            "Pig Slaughtered Hours %",
-            "Poultry Slaughtered Hours %",
+            "Dairy Hours %",
+            "Beef Hours %",
+            "Pig Hours %",
+            "Poultry Hours %",
         ],
         title="Slaughter Worker Effective Hours as a Percentage of Total Capacity",
         color_discrete_sequence=graph_colours,
@@ -355,7 +360,7 @@ def calculate_feed_and_animals(
                 "Beef Born": new_beef_calfs_pm,
                 "Beef Slaughtered": actual_beef_slaughter,
                 "Beef Slaughtered Hours": actual_beef_slaughter * cow_slaughter_hours,
-                "Beef Slaughtered Hours %": actual_beef_slaughter
+                "Beef Hours %": actual_beef_slaughter
                 * cow_slaughter_hours
                 / total_slaughter_cap_hours,
                 "Beef Other Death": other_beef_death,
@@ -367,7 +372,7 @@ def calculate_feed_and_animals(
                 "Dairy Slaughtered": current_dairy_slaughter,
                 "Dairy Slaughtered Hours": current_dairy_slaughter
                 * cow_slaughter_hours,
-                "Dairy Slaughtered Hours %": current_dairy_slaughter
+                "Dairy Hours %": current_dairy_slaughter
                 * cow_slaughter_hours
                 / total_slaughter_cap_hours,
                 "Dairy Other Death": other_dairy_death,
@@ -378,7 +383,7 @@ def calculate_feed_and_animals(
                 "Pig Born": new_pigs_pm,
                 "Pig Slaughtered": current_pig_slaughter,
                 "Pig Slaughtered Hours": current_pig_slaughter * pig_slaughter_hours,
-                "Pig Slaughtered Hours %": current_pig_slaughter
+                "Pig Hours %": current_pig_slaughter
                 * pig_slaughter_hours
                 / total_slaughter_cap_hours,
                 "Pigs Feed": current_total_pigs
@@ -389,7 +394,7 @@ def calculate_feed_and_animals(
                 "Poultry Slaughtered": current_poultry_slaughter,
                 "Poultry Slaughtered Hours": current_poultry_slaughter
                 * poultry_slaughter_hours,
-                "Poultry Slaughtered Hours %": current_poultry_slaughter
+                "Poultry Hours %": current_poultry_slaughter
                 * poultry_slaughter_hours
                 / total_slaughter_cap_hours,
                 "Poultry Feed": current_total_poultry
